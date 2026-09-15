@@ -31,7 +31,8 @@ sebuah adegan "kurang informasi", itu justru tanda adegannya sudah benar.
 | Latar diam, atau warna latar tidak pernah berganti walau segmen/energi berubah | Latar selalu bergerak (§7c); warna latar boleh berganti kapan dibutuhkan asal ada pemicu terlihat: benda menutup lensa, aksi UI, push ke bidang warna, medan menyapu, cut di ketukan (techniques.md §7b) |
 | Menyalin palet, font, dan tata letak video referensi yang disodorkan user | Ambil ritme dan energinya saja; kulit lahir dari tema produk — katakan itu ke user satu kalimat |
 | Menampilkan `com.example.app` (nama package) di adegan CTA | Dihapus. User tidak peduli; kalau perlu, cukup baris hasil pencarian store |
-| Teks in/out dengan kamera statis | Kamera bernapas + koreografi elemen beririsan (techniques.md §4b); push-through hanya bila termotivasi, ±1 per video |
+| Teks in/out dengan kamera statis | Ukuran shot berganti ke elemen yang sedang bercerita (techniques.md §3b) + koreografi elemen beririsan (§4b); napas kamera sebagai lapisan dasar; push-through hanya bila termotivasi, ±1 per video |
+| "Zoom in-out" dikerjakan sebagai napas kamera beberapa persen — tidak terlihat, video tetap terasa statis | Pergantian ukuran shot yang jelas: kamera mendekat ke elemen (medium close-up / close-up) lalu mundur ke wide saat komposisi butuh seluruh frame; label di lapisan layar supaya tidak terpotong (techniques.md §3b) |
 | Glow tebal 4 lapis di semua judul | Judul putih bersih + drop shadow tipis; glow disimpan untuk OBJEK (objek produk, ornamen) |
 | Latar warp 520 garis putih panjang | 300 partikel pendek berwarna gelap senada — latar tidak boleh bersaing dengan subjek |
 | Latar biru merata (flat) | Gradasi vertikal tegas: nyaris hitam di atas, menyala di horizon bawah |

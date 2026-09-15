@@ -327,6 +327,7 @@ tidak serempak. Untuk objek besar (kapal, kota) tambahkan gerak arah
 
 ## Resep kamera kolase: close-up → meluncur → zoom out
 
+Prinsip umum ukuran shot untuk semua jenis video ada di `techniques.md` §3b.
 Ini satu resep untuk kolase berteks. Untuk animasi karakter/proses, kamera dapat
 menetap, mengikuti subjek, atau menyusuri sistem setelah reveal awal. Jangan
 memaksakan resep ini pada setiap segmen; gunakan kebutuhan narasi sebagai alasan.

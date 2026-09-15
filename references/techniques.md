@@ -8,6 +8,7 @@ bukan hukum. Font, warna, dan konten selalu milik brand user.
 1. Tipografi hidup (split per huruf, penekanan & sorotan opsional, arah bergantian) + 1b. Kontras latar
 2. Motion blur berarah (pembeda utama dari "web animation")
 3. Kamera: push-through (opsional, termotivasi)
+3b. Ukuran shot: kamera ke elemen (wide ↔ medium close-up ↔ close-up)
 4. Kamera: pan 3D menyusur kalimat per kata
 4b. Transisi antar adegan — hierarki yang benar
 5. Light leak transisi
@@ -186,6 +187,69 @@ const camThrough = (atCut, {push=2.0, from=1.5, inDur=.5, outDur=.95,
 - Sinkron dengan kamera WebGL (`camZ`) menambah kedalaman, tapi rig DOM
   yang membawa perasaan "kamera".
 
+## 3b. Ukuran shot — kamera ke elemen (supaya tidak statis)
+
+"Zoom in-out" dalam motion graphic berarti **pergantian ukuran shot**: kamera mendekat ke
+satu elemen yang sedang bercerita, lalu mundur lagi. Napas kamera beberapa persen (§4b)
+hampir tidak terlihat — itu lapisan dasar, bukan jawaban bila video terasa statis.
+
+**Kosakata shot** (skala dihitung dari ukuran elemen, bukan angka tetap)
+- **Wide** — seluruh komposisi terlihat; dipakai saat banyak elemen atau teks lebar perlu
+  dibaca bersama.
+- **Medium close-up** — elemen utama beserta sedikit konteksnya; target mengisi kira-kira
+  sepertiga sampai setengah frame.
+- **Close-up** — satu elemen atau detailnya mengisi sebagian besar frame; dipakai untuk
+  penekanan, momen aksi, atau detail kecil yang harus terbaca.
+
+**Memilih target dan waktu**
+- Titik fokus = pusat elemen yang *sedang* bercerita: teks yang baru muncul, benda yang
+  tiba, tombol yang diklik, detail yang disebut kalimat. Kamera menyambut, bukan mengejar.
+- Shot berganti mengikuti ketukan isi. Pola yang umum: dekat ke elemen A → mundur ke wide
+  saat komposisi butuh seluruh frame → dekat ke elemen B. Variasikan ukuran; dua shot
+  dengan ukuran sama berturut-turut terasa datar.
+- Dua tempo gerak: **perpindahan shot** (ringkas, ease in-out) dan **push pelan saat
+  menahan** (lambat, ease sine) supaya hold tidak mati.
+- Di titik cut, kamera boleh langsung berada di close-up tanpa tween — adegan lahir dekat,
+  lalu mundur. Video pun boleh dibuka sudah dalam close-up.
+- Penutup yang ditahan (logo, CTA) tetap diberi push pelan; jangan membeku.
+- Hindari bolak-balik dekat–jauh lebih cepat daripada pembaca sempat membaca atau
+  melihat — terasa pusing. Teks muncul setelah kamera tiba, bukan di tengah perpindahan.
+
+**Rig**
+```js
+const CAM = {s:1, fx:W/2, fy:H/2};                       // skala + titik fokus (koordinat dunia)
+const shot  = (at, dur, s, fx, fy, ease='power2.inOut') => tl.to(CAM, {s, fx, fy, duration:dur, ease}, at);
+const cutTo = (at, s, fx, fy) => tl.set(CAM, {s, fx, fy}, at);   // lompat di titik cut
+// ukuran dari elemen: fill ≈ bagian frame yang diisi target (close-up besar, medium close-up sedang)
+const rectIn = (el, root) => { let x = 0, y = 0, n = el;
+  while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+  return {x, y, w: el.offsetWidth, h: el.offsetHeight}; };          // elemen SVG: pakai getBBox()
+const frameOn = (el, fill) => { const r = rectIn(el, world);
+  return [Math.max(1, Math.min(W * fill / r.w, H * fill / r.h)), r.x + r.w / 2, r.y + r.h / 2]; };
+// di render(t):
+function applyCam(t){
+  const s = CAM.s * (1 + .01 * Math.sin(t * .7));                  // napas halus di atas shot (opsional)
+  let tx = W/2 - CAM.fx * s, ty = H/2 - CAM.fy * s;
+  tx = Math.min(0, Math.max(W - W * s, tx)); ty = Math.min(0, Math.max(H - H * s, ty));   // tepi dunia tak tersingkap
+  world.style.transform = `translate(${tx}px,${ty}px) scale(${s})`; }
+// contoh: shot(T, .8, ...frameOn($('#judul'), .6)); shot(T + 2, .7, 1, W/2, H/2);
+```
+- Satu sistem skala per pembungkus: bila adegan memakai `shot()`, jangan sekaligus men-tween
+  `scale` pada `#world` dari `breathe()`/push-through; tumpuk napas di dalam `applyCam`.
+  Starter explainer sudah punya padanannya: `look()` = shot ke titik, `home()` = wide.
+- Dunia/latar harus lebih luas dari frame (overscan) supaya klem tepi tidak mengunci shot.
+
+**Lapisan**
+- Elemen yang merupakan bagian dunia ikut zoom. Label, caption, dan antarmuka layar
+  diletakkan di lapisan layar (HUD) di luar rig, supaya tidak membesar atau terpotong tepi.
+- Kamera lokal boleh dipasang per babak (mis. mendekat ke area klik, atau reveal yang
+  ditarik mundur dari skala besar) tanpa mengganggu kamera dunia. Getaran impact di
+  pembungkus terpisah.
+
+**Periksa**
+- Potret di puncak tiap shot: teks tidak terpotong tepi, tepi dunia tidak tersingkap.
+- Aset raster cukup tajam untuk skala close-up (resolusi ≥ skala × ukuran tampil).
+
 ## 4. Pan 3D menyusur kalimat
 
 Untuk 1 (maks 2) segmen istimewa: satu kalimat LEBIH LEBAR dari frame,
@@ -215,7 +279,8 @@ blur adalah bahasa preset editor video, bukan motion design). Urutan yang benar:
 
 1. **Kamera bernapas** (fondasi, selalu aktif): rig dunia drift zoom pelan
    `sine.inOut` ±4-5% per adegan, arah bergantian, dirantai tanpa lompatan.
-   Kamera tidak pernah diam dan tidak pernah menyentak.
+   Kamera tidak pernah diam dan tidak pernah menyentak. Napas ini hanya lapisan
+   dasar — tidak terbaca sebagai "zoom in-out"; untuk itu pakai ukuran shot (§3b).
 2. **Koreografi elemen beririsan**: elemen adegan lama keluar (cepat,
    `power2.in`, blur berarah) SAMBIL elemen adegan baru masuk — irisan
    waktunya yang membuat perpindahan terasa hidup, bukan efek kameranya.

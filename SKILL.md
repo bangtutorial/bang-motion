@@ -5,14 +5,14 @@ license: MIT
 metadata:
   author: Bang Tutorial
   author_url: https://youtube.com/bangtutorial
-  version: "1.18.0"
+  version: "1.19.0"
   updated: "2026-09-14"
   homepage: https://github.com/bangtutorial/bang-motion
 ---
 
 # Bang Motion — motion graphic web yang bukan PPT
 
-**v1.18.0 · by [Bang Tutorial](https://youtube.com/bangtutorial) · MIT.** Riwayat perubahan di `CHANGELOG.md`;
+**v1.19.0 · by [Bang Tutorial](https://youtube.com/bangtutorial) · MIT.** Riwayat perubahan di `CHANGELOG.md`;
 cara pasang di `README.md`.
 
 Skill ini untuk AI coding agent apa pun (format Agent Skills terbuka).
@@ -164,6 +164,10 @@ Aturan kerasnya:
 - **Adegan harus hidup.** Kamera boleh menetap saat objek membawa aksi.
   Gerakkan kamera untuk mengikuti atau mengungkap sesuatu; jangan mengandalkan
   teks fade/slide di atas latar diam, atau pan/zoom berulang di semua segmen.
+- **"Zoom in-out" = ukuran shot, bukan napas kamera.** Bila video terasa statis atau
+  user meminta zoom, kamera mendekat ke elemen yang sedang bercerita (medium close-up
+  / close-up) lalu mundur ke wide mengikuti ketukan isi; napas beberapa persen hampir
+  tak terlihat (`techniques.md` §3b).
 
 Baca `references/anti-ppt.md` SEBELUM mendesain adegan — berisi daftar
 pelanggaran nyata beserta perbaikannya.
@@ -439,6 +443,9 @@ bagian 1 dan 1b. Ringkasnya:
       peristiwa dapat memuat beberapa beat dan objek yang saling berhubungan.
 - [ ] Kamera, cut, dan gerak objek dipilih sesuai konteks; tidak ada keharusan
       menggerakkan kamera di tiap segmen. Saat kamera bergerak, seluruh dunia ikut.
+- [ ] Tidak ada hold panjang yang mati: babak tanpa aksi objek yang besar mendapat
+      perubahan ukuran shot ke elemen (wide ↔ medium close-up ↔ close-up) atau push pelan;
+      napas kamera saja tidak dihitung. Label layar di luar rig, tidak terpotong zoom
 - [ ] Motion blur berarah pada semua teks masuk/keluar
 - [ ] Latar lahir dari tema (tidak otomatis gelap; terang bisa gradien,
       warna lembut, blok warna, kertas), punya kedalaman (bukan satu warna
@@ -530,7 +537,7 @@ dan buat layer dari belakang ke depan. Build 10 panggung ≈ 1 jam, 0 kredit.
 | `references/opener-konsep.md` | OPENER/PROMO sebelum rundown: tiga kandidat konsep, menu 19 konsep (termasuk estafet benda, pamer sistem brand, klaim → cara → hasil, ekosistem UI hidup, pop flat berfoto, menembus bentuk bergradien, dan tur produk berselang klaim, semuanya diturunkan dari layanan/aset/produk brand), panduan layout-warna-ritme, panduan animasi UI untuk app/SaaS, panduan foto dalam opener (input user / generate via MCP), menu fitur, pembuka, penutup, transisi tanpa cut yang dibawa objek, sidik jari struktur — mencegah kerangka template |
 | `references/explainer.md` | bila yang diminta explainer/video penjelasan (kartun+VO, jurnalisme visual foto, katalog putih, sketsa vintage, atau aksi kontinu; default 16:9, 9:16 hanya bila diminta) |
 | `references/architecture.md` | saat scaffold / butuh alasan di balik struktur |
-| `references/techniques.md` | saat membangun adegan & efek (termasuk grainy gradient §7d, menu gaya render objek §7e, dan video sebagai layer footage §9b) |
+| `references/techniques.md` | saat membangun adegan & efek (termasuk ukuran shot §3b, grainy gradient §7d, menu gaya render objek §7e, dan video sebagai layer footage §9b) |
 | `references/roadmap.md` | saat mengembangkan skill ini lebih lanjut |
 | `assets/starter-opener.html` | titik awal OPENER/promo — arsitektur + perkakas (8 pintu teks, transisi opsional); SENGAJA tanpa urutan adegan contoh, kerangka dari `opener-konsep.md` |
 | `assets/starter-explainer.html` | EXPLAINER gaya aksi kontinu (vektor): mode aliran (strip + hero + objek dunia) + view peta + whip + contoh mode kolase |

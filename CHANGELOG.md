@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.19.0 — 2026-09-15
+
+**Ukuran shot — kamera ke elemen**
+- "Zoom in-out" dirumuskan sebagai pergantian ukuran shot (wide ↔ medium close-up ↔ close-up) ke
+  elemen yang sedang bercerita, bukan napas kamera beberapa persen yang hampir tak terlihat.
+- Panduan memilih target dan waktu, dua tempo gerak, rig kamera dengan skala dari ukuran elemen
+  dan klem tepi dunia, label di lapisan layar (`references/techniques.md` §3b).
+
 ## 1.18.0 — 2026-09-15
 
 **Video sebagai layer footage**

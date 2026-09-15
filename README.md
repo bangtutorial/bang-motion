@@ -7,7 +7,7 @@
 **An agent skill that turns your AI coding agent into a motion designer.**<br>
 Openers, promos, product demos, kinetic typography, and explainers — built as a single `index.html` that plays like video, not like slides.
 
-[![Version](https://img.shields.io/badge/version-1.18.0-2f6fd6?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.19.0-2f6fd6?style=flat-square)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3fa34d?style=flat-square)](LICENSE)
 [![Agent Skills](https://img.shields.io/badge/format-Agent%20Skills-1c2a4a?style=flat-square)](#install)
 [![Works with](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Gemini%20CLI%20%C2%B7%20Cursor-7a5af5?style=flat-square)](#install)
