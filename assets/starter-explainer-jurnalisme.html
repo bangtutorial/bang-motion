@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="id">
+<!-- Made with the Bang Motion skill v1.0.0 by Bang Tutorial (https://youtube.com/bangtutorial) - MIT - https://github.com/bangtutorial/bang-motion -->
+<head>
+<meta charset="utf-8">
+<title>Starter Explainer — Jurnalisme Visual (foto asli + highlighter)</title>
+<!--
+  Gaya 2: jurnalisme visual. Latar hitam pekat + grain tipis, foto asli berlisensi (Wikimedia/NASA) dengan gradasi gelap dan Ken Burns pelan, Barlow Condensed tebal + IBM Plex Mono untuk tag sumber, highlighter kuning, merah untuk peringatan, garis anotasi putus-putus. Tanpa VO pun bisa: beat 3–5 dtk untuk dibaca.
+
+  Rig (sama untuk semua starter explainer, lihat explainer.md "Mulai dari starter yang benar"):
+    - MODE KOLASE: dunia diam (#world, lebih besar dari frame) berisi cutout/foto; KAMERA yang berkoreografi
+      (into → settle → look → home lalu DIAM; teks baru muncul SETELAH zoom out selesai).
+    - aset masuk dengan fly (blur berarah) dan tetap bergoyang (±25 px / 1,5 dtk + putaran).
+    - teks per kata (say/unsay) dengan highlighter yang menyapu; anotasi digambar (draw).
+    - push-through antar adegan (into 0,9 dtk sebelum cut, settle sesudahnya) — bukan section yang di-fade.
+    - autoplay + loop TANPA player; ?debug=1 = panel scrub; ?clean=1 = untuk export; suara opsional (isi src #vo).
+    - 16:9 default. Untuk 9:16 bila diminta: W=1080,H=1920 + wrapper .safe scale(.78).
+  Ganti: aset (.cut), kalimat (.line dengan span.w per kata), label (.name), anotasi (.hand, svg.anno), tahun hantu (.ghost).
+-->
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0B0C;--ink:#F5F2EA;--yel:#FFD400;--red:#E8402F;--mute:#B9B3A6;--accent:#FFD400}
+html,body{margin:0;height:100%;background:#0a0a0a;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;overflow:hidden;background:var(--bg);font-family:"Barlow Condensed",system-ui,sans-serif;color:var(--ink)}
+#world{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
+#filters{position:fixed;width:0;height:0;opacity:0;pointer-events:none}
+.t{position:absolute;opacity:0}
+.w{display:inline-block;white-space:nowrap;margin:0 .1em;opacity:0;will-change:transform,opacity}
+.paper{position:absolute;inset:-1400px;background:var(--bg)}
+.grain{position:absolute;inset:-1400px;pointer-events:none;opacity:.14;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)'/%3E%3C/svg%3E")}
+.cut{position:absolute;opacity:0;overflow:hidden;will-change:transform,filter}
+.cut img{display:block;width:100%;height:100%;object-fit:cover}
+.cut::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(11,11,12,.85))}
+.ph{display:grid;place-items:center;width:100%;height:100%;background:#2a2a2e;color:var(--mute);font-family:"IBM Plex Mono",monospace;font-size:30px;text-align:center;line-height:1.5}
+.line{position:absolute;left:100px;right:100px;font-weight:700;font-size:112px;line-height:.98;letter-spacing:-.01em;color:var(--ink);opacity:0;text-wrap:balance}
+.hl{position:relative;display:inline-block;color:#111;padding:0 .12em;margin-left:-.06em}
+.hl i{position:absolute;left:0;right:0;top:.06em;bottom:.02em;background:var(--yel);transform:scaleX(0);transform-origin:0 50%;z-index:-1}
+.hl.r{color:var(--ink)} .hl.r i{background:var(--red)}
+.name{position:absolute;font-family:"IBM Plex Mono",monospace;font-size:30px;letter-spacing:.12em;color:var(--ink);padding:10px 16px;background:rgba(11,11,12,.72);border-left:5px solid var(--yel);opacity:0;white-space:nowrap}
+.hand{position:absolute;font-weight:700;font-size:52px;letter-spacing:.04em;color:var(--yel);opacity:0;white-space:nowrap}
+.ghost{position:absolute;font-weight:800;font-size:380px;line-height:.85;letter-spacing:-.02em;color:transparent;-webkit-text-stroke:3px rgba(245,242,234,.22);white-space:nowrap;opacity:0}
+.anno *{fill:none;stroke:var(--yel);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:18 16}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(80% 70% at 50% 50%,transparent 50%,rgba(0,0,0,.55) 100%)}
+#dbg{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:none;gap:12px;align-items:center;padding:10px 16px;border-radius:14px;background:rgba(14,16,22,.9);color:#cfd5e3;font:13px system-ui;z-index:50}
+#dbg input{width:360px}#dbg span{font-variant-numeric:tabular-nums;min-width:6ch}
+</style>
+</head>
+<body>
+<svg id="filters"><defs></defs></svg>
+<div id="stage">
+  <div id="world">
+    <div class="paper"></div><div class="grain"></div>
+    <div class="ghost" id="ghost" style="left:520px;top:120px">2026</div>
+    <div class="cut" id="cutA" style="left:160px;top:120px;width:900px;height:640px"><div class="ph">GANTI: foto asli berlisensi<br>(Wikimedia Commons / NASA)<br>+ tag sumber</div></div>
+    <div class="cut" id="cutB" style="left:1120px;top:300px;width:640px;height:480px"><div class="ph">GANTI: foto kedua</div></div>
+    <svg class="anno" id="annoA" style="position:absolute;left:180px;top:140px;width:720px;height:720px;overflow:visible" viewBox="0 0 720 720"><path id="ring" d="M60 380 C40 200 200 60 380 60 C560 60 680 200 660 380 C640 560 500 660 340 660 C180 660 80 540 60 380 Z"/></svg>
+    <div class="line t" id="line1" style="left:120px;top:860px">Judul tegas dengan <span class="hl"><i></i>sorotan kuning</span>.</div>
+    <div class="name" id="nameA" style="left:250px;top:820px">FOTO: NAMA FOTOGRAFER / CC BY-SA</div>
+    <div class="hand" id="handA" style="left:1100px;top:820px">anotasi 52 px</div>
+    <!-- adegan 2: di luar frame, dicapai lewat push-through kamera -->
+    <div class="cut" id="cutC" style="left:2400px;top:160px;width:960px;height:640px"><div class="ph">GANTI: foto adegan 2</div></div>
+    <div class="line t" id="line2" style="left:2440px;top:880px;right:auto;width:1500px">Peringatan pakai <span class="hl r"><i></i>merah</span>.</div>
+  </div>
+  <div class="vig"></div>
+  <div id="dbg"><button id="dPlay">Pause</button><input id="dScrub" type="range" min="0" max="1000" value="0"><span id="dClock">0.00s</span></div>
+</div>
+<audio id="vo" src="" preload="auto"></audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const W=1920,H=1080,DUR=18;
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H);$('#stage').style.transform=`translate(-50%,-50%) scale(${s})`;}
+addEventListener('resize',fit);fit();
+
+/* ---------- motion blur berarah (feGaussianBlur x/y terpisah) ---------- */
+const defs=$('#filters defs');let fc=0;
+function makeBlur(){const id='mb'+(fc++),NS='http://www.w3.org/2000/svg';const f=document.createElementNS(NS,'filter');f.id=id;
+  f.setAttribute('x','-70%');f.setAttribute('y','-70%');f.setAttribute('width','240%');f.setAttribute('height','240%');
+  const g=document.createElementNS(NS,'feGaussianBlur');g.setAttribute('stdDeviation','0 0');f.appendChild(g);defs.appendChild(f);return {url:`url(#${id})`,node:g};}
+function blurTween(tl,targets,at,from,to,dur,{ease='power3.out',ax=1,ay=.08}={}){const b=makeBlur(),o={v:from};tl.set(targets,{filter:b.url},at);
+  tl.to(o,{v:to,duration:dur,ease,onUpdate(){b.node.setAttribute('stdDeviation',`${(o.v*ax).toFixed(2)} ${(o.v*ay).toFixed(2)}`);}},at);tl.set(targets,{filter:'none'},at+dur);}
+const VERT={ax:.1,ay:1},HORZ={ax:1,ay:.1};
+
+/* ---------- pecah kalimat per kata (highlighter tetap satu span) ---------- */
+$$('.line').forEach(el=>{const out=[];el.childNodes.forEach(n=>{if(n.nodeType===3){n.textContent.split(/\s+/).filter(Boolean).forEach(w=>{const s=document.createElement('span');s.className='w';s.textContent=w;out.push(s);});}
+  else{const s=document.createElement('span');s.className='w';s.appendChild(n.cloneNode(true));out.push(s);}});el.textContent='';out.forEach(s=>el.appendChild(s));});
+
+const tl=gsap.timeline({paused:true});const rig=$('#world');
+const words=el=>$$('.w',el);
+const say=(sel,at,{dur=.55,st=.08,mode='up'}={})=>{const el=$(sel),ws=words(el);tl.set(el,{opacity:1},at);
+  if(mode==='scale')tl.fromTo(ws,{opacity:0,scale:.7,rotate:-3},{opacity:1,scale:1,rotate:0,duration:dur,ease:'back.out(1.6)',stagger:st,immediateRender:false},at);
+  else tl.fromTo(ws,{opacity:0,yPercent:60,scaleY:1.25},{opacity:1,yPercent:0,scaleY:1,duration:dur,ease:'power4.out',stagger:st,immediateRender:false},at);
+  blurTween(tl,el,at,22,0,dur+st*ws.length,VERT);
+  $$('.hl i',el).forEach((h,i)=>tl.fromTo(h,{scaleX:0},{scaleX:1,duration:.4,ease:'power3.out',immediateRender:false},at+st*ws.length+.2+i*.2));};
+const unsay=(sel,at,{dur=.3}={})=>{const el=$(sel),ws=words(el);tl.to(ws,{opacity:0,yPercent:-50,duration:dur,ease:'power2.in',stagger:.02},at);
+  blurTween(tl,el,at,0,30,dur+.1,{ease:'power2.in',...VERT});tl.set(el,{opacity:0},at+dur+.15);};
+/* aset: masuk dengan kabut searah + TETAP hidup (ayunan ±25 px / 1,5 dtk + putaran) */
+const fly=(sel,at,{from={x:0,y:60,rotate:0,scale:1.04},dur=.9,ease='power4.out',float=true}={})=>{const el=$(sel);
+  tl.fromTo(el,{opacity:0,...from},{opacity:1,x:0,y:0,rotate:0,scale:1,duration:dur,ease,immediateRender:false},at);
+  blurTween(tl,el,at,34,0,dur*.7,Math.abs(from.x||0)>Math.abs(from.y||0)?HORZ:VERT);
+  if(float)tl.to(el,{y:-25,rotate:1.5,scale:1.03,duration:1.5+((at*7)%1)*.3,ease:'sine.inOut',yoyo:true,repeat:-1},at+dur);};
+const flyOut=(sel,at,{to={x:0,y:-700,rotate:-8,scale:1.1},dur=.45}={})=>{const el=$(sel);tl.to(el,{opacity:0,...to,duration:dur,ease:'power2.in'},at);blurTween(tl,el,at,0,50,dur+.1,{ease:'power2.in',...VERT});};
+/* anotasi: garis digambar (clip-path) — bervariasi: utuh/putus/ganda, jangan selalu lingkaran putus */
+const draw=(sel,at,dur=.7)=>{const p=$(sel);tl.set(p,{opacity:0},0);tl.set(p,{opacity:1},at);const o={v:0};
+  tl.to(o,{v:1,duration:dur,ease:'power2.inOut',onUpdate(){p.style.clipPath=`inset(-300px ${(1-o.v)*100}% -300px -300px)`;}},at);};
+const label=(sel,at)=>tl.fromTo($(sel),{opacity:0,y:14},{opacity:1,y:0,duration:.4,ease:'power3.out',immediateRender:false},at);
+const unlabel=(sel,at)=>tl.to($(sel),{opacity:0,duration:.25},at);
+
+/* ---------- kamera: rig #world, semua gerak adegan lewat sini ---------- */
+const C={x:960,y:540,z:1};
+function applyCam(){rig.style.transform=`translate(${960-C.x*C.z}px,${540-C.y*C.z}px) scale(${C.z})`;}
+const look=(at,x,y,z,dur=1.6,ease='sine.inOut')=>tl.to(C,{x,y,z,duration:dur,ease,onUpdate:applyCam},at);   // meluncur ke aset lain
+const home=(at,x=960,y=540,dur=1.2)=>look(at,x,y,1,dur,'power2.inOut');                                       // zoom out ke frame adegan, lalu DIAM
+const into=(cutAt,x,y,z)=>tl.to(C,{x,y,z,duration:.9,ease:'power2.in',onUpdate:applyCam},cutAt-.9);          // push-through sebelum cut
+const settle=(cutAt,x,y,z)=>tl.to(C,{x,y,z:z*.94,duration:1.1,ease:'power3.out',onUpdate:applyCam},cutAt);   // mendarat setelah cut
+const breath=(a,b,z)=>tl.to(C,{z,duration:b-a,ease:'sine.inOut',onUpdate:applyCam},a);                       // napas halus saat "diam"
+
+/* ---------- contoh koreografi (ganti isinya, pertahankan polanya) ---------- */
+tl.set(C,{x:530,y:490,z:1.8,onUpdate:applyCam},0);              // mulai close-up aset A
+tl.fromTo('#ghost',{opacity:0,y:40},{opacity:1,y:0,duration:1.2,ease:'power2.out'},.2);
+fly('#cutA',.3);
+look(2.2,1380,520,1.6,1.4);                                     // meluncur ke aset B
+fly('#cutB',2.5,{from:{x:400,y:0,rotate:-6,scale:.9}});
+home(4.2);                                                      // zoom out SELESAI di 5.4 → baru teks
+say('#line1',5.5);
+draw('#ring',6.8,.8);label('#nameA',7.2);label('#handA',7.8);
+breath(5.4,10.8,1.03);
+unsay('#line1',10.4);unlabel('#nameA',10.4);unlabel('#handA',10.4);tl.to('#ring',{opacity:0,duration:.25},10.4);
+/* adegan 2: push-through kontinu ke area dunia di sebelah kanan (bukan fade) */
+into(11.4,2600,540,1.6);settle(11.4,2820,520,1.7);
+fly('#cutC',11.5,{from:{x:0,y:400,rotate:8,scale:.9}});
+home(13.2,2800,540,1.2);                                        // frame adegan 2 (pusat dunia 2800,540)
+say('#line2',14.5);
+breath(14.4,DUR,1.03);
+tl.to({},{duration:.01},DUR);
+
+/* ---------- kontrol: autoplay + loop tanpa player; ?debug=1 panel; ?clean=1 export ---------- */
+const q=new URLSearchParams(location.search),vo=$('#vo'),hasVO=!!vo.getAttribute('src');let audioOn=false;
+function start(){tl.play(0);if(hasVO){vo.currentTime=0;vo.play().then(()=>audioOn=true).catch(()=>{});}}
+tl.eventCallback('onComplete',()=>start());
+gsap.ticker.add(()=>{if(!audioOn||tl.paused())return;if(Math.abs(vo.currentTime-tl.time())>.12)vo.currentTime=tl.time();});
+window.OPENER={W,H,DURATION:DUR,tl,ready:false,seek(t){tl.pause(t,false);applyCam();if(gsap.ticker.tick)gsap.ticker.tick();}   /* pause(t,false): callback onUpdate ikut jalan saat scrub/snapshot */,play:start};
+addEventListener('keydown',e=>{if(/^[rR]$/.test(e.key))start();if(e.code==='Space'){e.preventDefault();tl.paused()?tl.play():tl.pause();}});
+if(q.has('debug')){const dbg=$('#dbg');dbg.style.display='flex';const sc=$('#dScrub'),ck=$('#dClock');let drag=false;
+  gsap.ticker.add(()=>{if(!drag)sc.value=String(tl.time()/DUR*1000);ck.textContent=tl.time().toFixed(2)+'s';$('#dPlay').textContent=tl.paused()?'Play':'Pause';});
+  sc.addEventListener('pointerdown',()=>{drag=true;tl.pause();});addEventListener('pointerup',()=>drag=false);
+  sc.addEventListener('input',()=>{tl.pause();tl.time(sc.value/1000*DUR);});$('#dPlay').onclick=()=>tl.paused()?tl.play():tl.pause();}
+document.fonts.ready.then(()=>{applyCam();window.OPENER.ready=true;if(q.has('clean'))return;
+  if(!hasVO){start();return;}
+  vo.play().then(()=>{audioOn=true;vo.currentTime=0;tl.play(0);}).catch(()=>{const go=()=>{removeEventListener('pointerdown',go);removeEventListener('keydown',go);start();};addEventListener('pointerdown',go);addEventListener('keydown',go);});});
+</script>
+</body>
+</html>

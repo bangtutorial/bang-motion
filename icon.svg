@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151A33"/>
+      <stop offset="1" stop-color="#0A0D1C"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.72" cy="0.28" r="0.6">
+      <stop offset="0" stop-color="#FF6A3D" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#FF6A3D" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="path" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#FF4D3D"/>
+      <stop offset="0.6" stop-color="#FF8A3D"/>
+      <stop offset="1" stop-color="#FFC24D"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <!-- panggung -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+
+  <!-- jejak gerak: blur di belakang jalur -->
+  <path d="M104 372 C 190 372, 188 152, 292 152 S 372 244, 408 150"
+        fill="none" stroke="#FF6A3D" stroke-width="42" stroke-linecap="round" opacity="0.45" filter="url(#soft)"/>
+  <!-- jalur gerak -->
+  <path d="M104 372 C 190 372, 188 152, 292 152 S 372 244, 408 150"
+        fill="none" stroke="url(#path)" stroke-width="30" stroke-linecap="round"/>
+
+  <!-- keyframe berlian: dua sudah lewat -->
+  <g transform="translate(104 372) rotate(45)">
+    <rect x="-24" y="-24" width="48" height="48" rx="8" fill="#0A0D1C" stroke="#FFFFFF" stroke-width="10"/>
+  </g>
+  <g transform="translate(292 152) rotate(45)">
+    <rect x="-24" y="-24" width="48" height="48" rx="8" fill="#0A0D1C" stroke="#FFFFFF" stroke-width="10"/>
+  </g>
+  <!-- keyframe aktif: penuh, menyala -->
+  <g transform="translate(408 150) rotate(45)">
+    <rect x="-40" y="-40" width="80" height="80" rx="12" fill="#FFC24D" opacity="0.35" filter="url(#soft)"/>
+    <rect x="-30" y="-30" width="60" height="60" rx="10" fill="#FFFFFF"/>
+  </g>
+</svg>

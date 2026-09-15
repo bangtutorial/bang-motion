@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Deteksi jeda VO (tanpa ffmpeg)</title>
+<!--
+  Pengganti `ffmpeg silencedetect` untuk menyinkronkan explainer ke voice-over
+  bila ffmpeg tidak terpasang. Buka berkas ini dengan klik dua kali, pilih audio
+  (wav/mp3/m4a/ogg — apa pun yang bisa didekode browser), lalu salin hasilnya.
+
+  Keluaran:
+    - daftar JEDA (mulai, selesai, lama)
+    - daftar POTONGAN UCAPAN (mulai, selesai) = kalimat/paragraf VO
+    - baris `const SEG=[...]` siap tempel: waktu mulai tiap potongan ucapan
+
+  Cara memakai hasilnya: satu paragraf naskah = satu potongan ucapan (jeda ≥ ambang
+  "batas paragraf"). Beri tiap adegan t0 = mulai potongan itu; total durasi = panjang audio.
+-->
+<style>
+body{font:15px/1.5 system-ui,sans-serif;margin:0;padding:28px;background:#0f1320;color:#e6e9f2}
+h1{font-size:20px;margin:0 0 6px}p{margin:0 0 14px;color:#aab1c4}
+label{display:inline-block;margin:6px 16px 6px 0}input[type=number]{width:70px}
+pre{background:#161b2c;border:1px solid #2a3147;border-radius:10px;padding:14px;white-space:pre-wrap;user-select:all}
+canvas{width:100%;height:120px;background:#161b2c;border-radius:10px;display:block;margin:12px 0}
+button{background:#3b5bdb;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>Deteksi jeda voice-over</h1>
+<p>Pilih audio VO. Ambang hening relatif terhadap puncak (default −30 dB), jeda minimal 0,45 dtk, batas paragraf ≥ 0,8 dtk. Ubah lalu tekan Hitung ulang.</p>
+<input type="file" id="f" accept="audio/*">
+<div>
+  <label>Ambang hening (dB) <input type="number" id="th" value="-30" step="1"></label>
+  <label>Jeda minimal (dtk) <input type="number" id="mn" value="0.45" step="0.05"></label>
+  <label>Batas paragraf (dtk) <input type="number" id="pg" value="0.8" step="0.05"></label>
+  <button id="go">Hitung ulang</button>
+</div>
+<canvas id="c" width="1600" height="120"></canvas>
+<pre id="out">Belum ada audio.</pre>
+<script>
+let buf=null;
+const $=s=>document.querySelector(s);
+$('#f').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
+  const ac=new (window.AudioContext||window.webkitAudioContext)();buf=await ac.decodeAudioData(await file.arrayBuffer());run();});
+$('#go').onclick=()=>buf&&run();
+function run(){
+  const th=+$('#th').value,minSil=+$('#mn').value,par=+$('#pg').value;
+  const sr=buf.sampleRate,n=buf.length,ch=buf.numberOfChannels,win=Math.round(sr*.01);   // jendela 10 ms
+  const data=new Float32Array(n);for(let c=0;c<ch;c++){const d=buf.getChannelData(c);for(let i=0;i<n;i++)data[i]+=d[i]/ch;}
+  const frames=Math.floor(n/win),rms=new Float32Array(frames);let peak=1e-9;
+  for(let f=0;f<frames;f++){let s=0;for(let i=f*win;i<(f+1)*win;i++)s+=data[i]*data[i];rms[f]=Math.sqrt(s/win);if(rms[f]>peak)peak=rms[f];}
+  const lim=peak*Math.pow(10,th/20);
+  // jeda = deretan jendela hening ≥ minSil
+  const sil=[];let start=null;
+  for(let f=0;f<=frames;f++){const q=f<frames&&rms[f]<lim;if(q&&start===null)start=f;if((!q||f===frames)&&start!==null){const a=start*win/sr,b=f*win/sr;if(b-a>=minSil)sil.push([a,b]);start=null;}}
+  const dur=n/sr;
+  // potongan ucapan = di antara jeda; batas paragraf hanya bila jeda ≥ par
+  const seg=[];let cur=0;
+  for(const [a,b] of sil){if(a-cur>0.15)seg.push([cur,a,b-a]);cur=b;}
+  if(dur-cur>0.15)seg.push([cur,dur,0]);
+  const paras=[];let ps=seg.length?seg[0][0]:0;
+  for(let i=0;i<seg.length;i++){const gapAfter=seg[i][2];if(gapAfter>=par||i===seg.length-1){paras.push([ps,seg[i][1]]);ps=i+1<seg.length?seg[i+1][0]:dur;}}
+  // gambar
+  const c=$('#c'),g=c.getContext('2d');g.clearRect(0,0,c.width,c.height);g.fillStyle='#3b5bdb';
+  for(let f=0;f<frames;f++){const h=Math.min(1,rms[f]/peak)*110;g.fillRect(f/frames*c.width,110-h,Math.max(1,c.width/frames),h);}
+  g.fillStyle='rgba(255,212,0,.45)';for(const [a,b] of sil)g.fillRect(a/dur*c.width,0,Math.max(1,(b-a)/dur*c.width),120);
+  g.fillStyle='#e8402f';for(const [a] of paras)g.fillRect(a/dur*c.width,0,2,120);
+  const f2=x=>x.toFixed(2);
+  let out=`durasi: ${f2(dur)} dtk · puncak RMS ${peak.toFixed(4)} · ambang ${th} dB\n\nJEDA (mulai → selesai, lama):\n`;
+  out+=sil.map(([a,b])=>`  ${f2(a)} → ${f2(b)}  (${f2(b-a)})`).join('\n')||'  (tidak ada)';
+  out+=`\n\nPOTONGAN UCAPAN (${seg.length}):\n`+seg.map(([a,b],i)=>`  ${i+1}. ${f2(a)} → ${f2(b)}`).join('\n');
+  out+=`\n\nPARAGRAF (jeda ≥ ${par} dtk) (${paras.length}):\n`+paras.map(([a,b],i)=>`  ${i+1}. ${f2(a)} → ${f2(b)}`).join('\n');
+  out+=`\n\nTempel ke kode:\nconst SEG=[${seg.map(s=>f2(s[0])).join(',')}];   // mulai tiap potongan ucapan\nconst PARA=[${paras.map(s=>f2(s[0])).join(',')}];  // mulai tiap paragraf/adegan\nconst DUR=${f2(dur)};`;
+  $('#out').textContent=out;
+}
+</script>
+</body>
+</html>

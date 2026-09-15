@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="id">
+<!-- Made with the Bang Motion skill v1.0.0 by Bang Tutorial (https://youtube.com/bangtutorial) - MIT - https://github.com/bangtutorial/bang-motion -->
+<head>
+<meta charset="utf-8">
+<title>Bang Motion — Starter Explainer (semua gaya: aliran & kolase)</title>
+<!--
+  STARTER EXPLAINER satu-berkas, 16:9 — untuk SEMUA gaya explainer.
+  Gaya (kartun kolase, jurnalisme foto, katalog putih, sketsa vintage, aksi kontinu vektor)
+  hanya mengganti permukaan: tekstur latar, jenis aset (cutout PNG / foto / SVG), font, warna.
+  Rig-nya sama dan ada dua MODE gerak dunia yang bisa dipakai bergantian:
+    - MODE ALIRAN  (view #side): dunia mengalir lewat strip parallax dari profil kecepatan; subjek diam di frame.
+    - MODE KOLASE  (view #collage): dunia diam berisi cutout/foto; KAMERA yang berkoreografi
+      (push-through ke aset -> meluncur ke aset lain -> zoom out, lalu diam; teks baru muncul setelah zoom out).
+  Yang penting di sini adalah RIG-nya, bukan isinya:
+    - dunia yang terus mengalir (strip parallax looping) dari profil kecepatan → jarak D(t)
+    - satu SUBJEK (hero) yang tidak pernah keluar frame
+    - objek dunia (angka/papan/bangunan) yang masuk pada detik tertentu dan bergerak ikut dunia
+    - beberapa VIEW (sudut pandang) berganti lewat whip: samping → peta → samping
+    - kamera bernapas (keyframe zoom/geser) — framing tidak pernah beku
+    - autoplay + loop, TANPA player; panel scrub hanya bila ?debug=1; ?clean=1 untuk export
+  Ganti: hero, strip latar, objek dunia, view tambahan, dan angka-angka di #ui.
+  Buka dengan klik dua kali. Hanya butuh browser + internet (GSAP & font dari CDN).
+-->
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--sky:#cfe0f5;--sky2:#f5efe3;--far:#a7bedf;--hill:#9cc27e;--hill2:#7fb06a;--field:#cfe19c;--ink:#1c2a4a;--accent:#d7262c}
+html,body{margin:0;height:100%;background:#0a0f1e;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;overflow:hidden;background:var(--sky);
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--ink)}   /* diposisikan absolut + translate(-50%,-50%): grid center akan terpotong */
+#stage svg{position:absolute;inset:0;width:1920px;height:1080px;overflow:visible}
+.view{position:absolute;inset:0}
+.view.off{visibility:hidden}
+.big{font-family:'Unbounded',sans-serif;font-weight:900}
+#ui{position:absolute;inset:0;pointer-events:none}
+.top{position:absolute;left:0;right:0;top:80px;text-align:center;opacity:0}
+.kick{font-weight:800;font-size:44px;letter-spacing:.18em}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(90% 90% at 50% 50%,transparent 60%,rgba(10,15,30,.28))}
+/* panel developer: hanya tampil dengan ?debug=1 */
+#dbg{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:none;gap:12px;align-items:center;padding:10px 16px;border-radius:14px;
+  background:rgba(14,16,22,.9);color:#cfd5e3;font:13px system-ui;z-index:50}
+#dbg input{width:360px}#dbg span{font-variant-numeric:tabular-nums;min-width:6ch}
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- VIEW 1: samping — dunia mengalir, hero diam di frame -->
+  <div id="side" class="view"><svg viewBox="0 0 1920 1080"><g id="sideCam">
+    <rect x="-300" y="-300" width="2520" height="1680" fill="var(--sky)"/>
+    <g id="far"></g><g id="hills"></g><g id="ground"></g><g id="deepObjs"></g>
+    <rect x="-200" y="700" width="2320" height="40" fill="#c9d0da"/>
+    <g id="hero"></g><g id="frontObjs"></g>
+  </g></svg></div>
+  <!-- VIEW 2: MODE KOLASE — dunia diam (kertas/foto/putih), kamera menyusuri aset -->
+  <div id="collage" class="view off"><div id="colWorld" style="position:absolute;inset:0;transform-origin:0 0">
+    <div class="paper" style="position:absolute;inset:-1400px;background:#f1ead8"></div>
+    <!-- aset kolase: cutout PNG / foto / SVG, posisi absolut di panggung 1920x1080; boleh lebih besar dari frame -->
+    <div class="cut" id="cutA" style="position:absolute;left:260px;top:220px;width:520px;height:520px;border-radius:24px;background:#c9d0da;opacity:0"></div>
+    <div class="cut" id="cutB" style="position:absolute;left:1100px;top:300px;width:600px;height:440px;border-radius:24px;background:#b9d386;opacity:0"></div>
+    <div class="hand" id="noteA" style="position:absolute;left:300px;top:790px;font-size:52px;font-weight:800;color:var(--accent);opacity:0">anotasi tangan &ge; 48 px</div>
+  </div></div>
+  <!-- VIEW 3: peta simulasi rute — pemecah monotoni -->
+  <div id="map" class="view off"><svg viewBox="0 0 1920 1080"><g id="mapCam"><rect x="-1500" y="-1500" width="5000" height="4000" fill="#bcd9ee"/><g id="mapArt"></g></g></svg></div>
+  <div id="vig"></div>
+  <div id="ui">
+    <!-- angka besar yang menempel kamera: satu blok per fakta, muncul SETELAH kamera selesai bergerak -->
+    <div class="top" id="numA"><div class="kick">JARAK</div><div class="big" style="font-size:210px;color:var(--accent);line-height:1.05">142<span style="font-size:100px;color:var(--ink)"> km</span></div></div>
+  </div>
+  <div id="dbg"><button id="dPlay">Pause</button><input id="dScrub" type="range" min="0" max="1000" value="0"><span id="dClock">0.00s</span></div>
+</div>
+<!-- suara opsional: isi src bila ada VO/musik; kosong = diabaikan -->
+<audio id="vo" src="" preload="auto"></audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const W=1920,H=1080,DUR=22;
+const $=s=>document.querySelector(s), NS='http://www.w3.org/2000/svg';
+function S(tag,attrs={},parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+const T=(txt,x,y,attrs,parent)=>{const e=S('text',{x,y,...attrs},parent);e.textContent=txt;return e;};
+const mod=(a,n)=>((a%n)+n)%n, smooth=x=>x<=0?0:x>=1?1:x*x*(3-2*x);
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H);$('#stage').style.transform=`translate(-50%,-50%) scale(${s})`;}
+addEventListener('resize',fit);fit();
+
+/* ---------- profil kecepatan (px/dtk di bidang subjek) → jarak D(t); semuanya fungsi waktu ---------- */
+const VK=[[0,600],[1.2,900],[15,900],[19,0],[DUR+1,0]];   // [detik, kecepatan]; ubah untuk berhenti/melaju
+const vAt=t=>{for(let i=1;i<VK.length;i++){if(t<=VK[i][0]){const [t0,v0]=VK[i-1],[t1,v1]=VK[i];return v0+(v1-v0)*(t-t0)/(t1-t0);}}return 0;};
+const DT=1/240,DA=[0];for(let i=1;i<=(DUR+1)/DT;i++)DA[i]=DA[i-1]+vAt(i*DT)*DT;
+const D=t=>{const i=Math.max(0,Math.min(DA.length-2,t/DT)),k=Math.floor(i);return DA[k]+(DA[k+1]-DA[k])*(i-k);};
+
+/* ---------- strip latar looping (parallax) & objek dunia ---------- */
+const strips=[],objs=[],P=2400;
+function strip(parent,f,draw){const g=S('g',{},parent);for(let c=0;c<2;c++)draw(S('g',{transform:`translate(${c*P} 0)`},g));strips.push({el:g,f});}
+/* objek dunia: masuk dari x0 pada detik t0, bergerak dengan faktor f, dibuang setelah t1 */
+function wobj(parent,f,x0,t0,w,t1=1e9){const g=S('g',{visibility:'hidden'},parent);objs.push({el:g,f,x0,t0,w,t1,d0:D(t0)});return g;}
+
+strip($('#far'),.18,g=>{S('path',{d:'M0 640 L0 520 L200 430 L400 500 L600 400 L800 490 L1000 420 L1200 510 L1400 430 L1600 500 L1800 420 L2000 520 L2200 450 L2400 520 L2400 640 Z',fill:'var(--far)'},g);});
+strip($('#hills'),.38,g=>{S('path',{d:'M0 700 L0 620 C300 570 500 660 800 610 C1100 560 1300 660 1600 610 C1900 560 2200 650 2400 620 L2400 700 Z',fill:'var(--hill2)'},g);});
+strip($('#ground'),.62,g=>{S('rect',{x:0,y:740,width:2400,height:400,fill:'var(--field)'},g);for(let i=0;i<14;i++)S('rect',{x:i*180,y:880+(i%3)*30,width:150,height:30,rx:8,fill:'var(--hill)',opacity:.6},g);});
+
+/* hero placeholder: ganti dengan subjekmu (kendaraan/atlet/kurir...). Nose di x=0, dasar di y=0 */
+const hero=S('g',{},$('#hero'));
+S('rect',{x:-900,y:-150,width:960,height:120,rx:40,fill:'#ffffff',stroke:'var(--ink)','stroke-width':6},hero);
+S('rect',{x:-900,y:-95,width:960,height:14,fill:'var(--accent)'},hero);
+const wheels=[];[-780,-620,-260,-100].forEach(x=>{const w=S('g',{transform:`translate(${x} -18)`},hero);S('circle',{r:18,fill:'#dfe3ea',stroke:'#2b3346','stroke-width':5},w);S('rect',{x:-2,y:-14,width:4,height:28,fill:'#2b3346'},w);wheels.push(w);});
+const HX=1380,HY=700;
+
+/* objek dunia contoh: papan angka berdiri di latar (f<1 = lebih jauh), subjek melintas di depannya */
+{const g=wobj($('#deepObjs'),.8,W+80,3,1100);T('350',0,480,{class:'big','font-size':400,fill:'var(--ink)','letter-spacing':'-.04em'},g);T('km/jam',830,478,{'font-size':96,'font-weight':800,fill:'var(--accent)'},g);}
+
+/* ---------- VIEW peta: rute tergambar, penanda mengikuti path, kamera zoom awal → seluruh rute ---------- */
+const mapArt=$('#mapArt'),mapCam=$('#mapCam');
+S('path',{d:'M-1500 700 C-400 560 300 380 860 190 C1300 60 1800 -60 3500 -200 L3500 2500 L-1500 2500 Z',fill:'#ece6d2'},mapArt);
+const ROUTE='M460 330 C720 380 1120 560 1300 700 C1380 760 1470 780 1560 790';
+const routeEl=S('path',{d:ROUTE,fill:'none',stroke:'var(--accent)','stroke-width':10,'stroke-linecap':'round'},mapArt);
+const RL=routeEl.getTotalLength();routeEl.setAttribute('stroke-dasharray',RL);
+const marker=S('circle',{r:16,fill:'#fff',stroke:'var(--accent)','stroke-width':6},mapArt);
+const MAP_T0=9;   // detik penanda mulai berjalan
+function renderMap(t){const q=smooth((t-MAP_T0)/3.2),e=smooth((t-MAP_T0)/3.4);routeEl.setAttribute('stroke-dashoffset',RL*(1-q));
+  const pt=routeEl.getPointAtLength(RL*q);marker.setAttribute('cx',pt.x);marker.setAttribute('cy',pt.y);
+  const cx=pt.x+(1000-pt.x)*e,cy=pt.y+(560-pt.y)*e,z=2.3+(1-2.3)*e;mapCam.setAttribute('transform',`translate(960 540) scale(${z}) translate(${-cx} ${-cy})`);}
+
+/* ---------- MODE KOLASE: kamera berkoreografi di atas dunia diam ---------- */
+const C={x:960,y:540,z:1};const colWorld=$('#colWorld');
+function applyCam(){colWorld.style.transform=`translate(${960-C.x*C.z}px,${540-C.y*C.z}px) scale(${C.z})`;}
+const look=(at,x,y,z,dur=1.6,ease='sine.inOut')=>tl.to(C,{x,y,z,duration:dur,ease,onUpdate:applyCam},at);   // meluncur ke aset lain
+const home=(at,dur=1.2)=>look(at,960,540,1,dur,'power2.inOut');                                              // zoom out, lalu DIAM
+const into=(cutAt,x,y,z)=>tl.to(C,{x,y,z,duration:.9,ease:'power2.in',onUpdate:applyCam},cutAt-.9);          // push-through sebelum cut
+const settle=(cutAt,x,y,z)=>tl.to(C,{x,y,z:z*.94,duration:1.1,ease:'power3.out',onUpdate:applyCam},cutAt);   // mendarat setelah cut
+/* aset masuk dengan blur berarah lalu TETAP hidup (ayunan +-25 px / 1,5 dtk + putaran) */
+function fly(at,sel,{from='left',dur=.7}={}){const dx=from==='left'?-260:from==='right'?260:0,dy=from==='top'?-220:from==='bottom'?220:0;
+  tl.fromTo(sel,{opacity:0,x:dx,y:dy,filter:'blur(14px)',rotation:from==='left'?-6:6},{opacity:1,x:0,y:0,filter:'blur(0px)',rotation:0,duration:dur,ease:'power4.out'},at);
+  tl.to(sel,{y:'+=25',rotation:'+=1.5',duration:1.5,yoyo:true,repeat:-1,ease:'sine.inOut'},at+dur);}
+const flyOut=(at,sel)=>tl.to(sel,{opacity:0,y:-120,filter:'blur(12px)',duration:.4,ease:'power2.in'},at);
+
+/* ---------- kamera samping bernapas: [detik, zoom, cx, cy] ---------- */
+const CAMK=[[0,1,960,540],[2,1.06,900,470],[6,1,960,540],[DUR+1,1,960,540]];
+function camAt(t){for(let i=1;i<CAMK.length;i++){if(t<=CAMK[i][0]){const A=CAMK[i-1],B=CAMK[i],u=smooth((t-A[0])/(B[0]-A[0]));return [A[1]+(B[1]-A[1])*u,A[2]+(B[2]-A[2])*u,A[3]+(B[3]-A[3])*u];}}const L=CAMK.at(-1);return [L[1],L[2],L[3]];}
+
+/* ---------- timeline: hanya hal-hal diskrit (ganti view, teks kamera) ---------- */
+const tl=gsap.timeline({paused:true});
+const view={side:$('#side'),map:$('#map'),collage:$('#collage')};
+function whip(t,from,to,dir=1){tl.to(from,{y:-120*dir,filter:'blur(18px)',duration:.28,ease:'power2.in'},t);
+  tl.set(from,{className:'view off'},t+.28);tl.set(to,{className:'view',y:120*dir,filter:'blur(18px)'},t+.28);tl.to(to,{y:0,filter:'blur(0px)',duration:.36,ease:'power3.out'},t+.28);}
+const fadeUp=(t,sel)=>tl.fromTo(sel,{opacity:0,y:30,filter:'blur(6px)'},{opacity:1,y:0,filter:'blur(0px)',duration:.5,ease:'power3.out'},t);
+const fadeOut=(t,sel)=>tl.to(sel,{opacity:0,y:-30,filter:'blur(8px)',duration:.35,ease:'power2.in'},t);
+whip(8.6,view.side,view.map,1);
+fadeUp(12.6,'#numA');fadeOut(14.6,'#numA');     // angka muncul SETELAH zoom-out peta selesai
+whip(15,view.map,view.collage,1);
+/* contoh MODE KOLASE: close-up aset A -> meluncur ke aset B -> zoom out -> baru anotasi */
+tl.set(C,{x:520,y:480,z:1.9,onUpdate:applyCam},15.3);
+fly(15.4,'#cutA',{from:'left'});
+look(16.6,1400,520,1.7,1.4);fly(16.9,'#cutB',{from:'right'});
+home(18.2,1.2);
+tl.fromTo('#noteA',{opacity:0,y:20},{opacity:1,y:0,duration:.4},19.5);   // teks setelah zoom out SELESAI
+tl.to({},{duration:.01},DUR);
+
+/* ---------- render: fungsi murni dari tl.time() ---------- */
+function render(){const t=tl.time(),d=D(t);
+  for(const s of strips)gsap.set(s.el,{x:-mod(d*s.f,P)});
+  for(const o of objs){if(t<o.t0||t>o.t1){o.el.setAttribute('visibility','hidden');continue;}const x=o.x0-(d-o.d0)*o.f;
+    if(x+o.w<-100||x>W+240){o.el.setAttribute('visibility','hidden');continue;}o.el.removeAttribute('visibility');gsap.set(o.el,{x});}   // removeAttribute, bukan 'visible' (menembus view yang disembunyikan)
+  hero.setAttribute('transform',`translate(${HX} ${HY+Math.sin(t*9)*2.5}) rotate(${Math.sin(t*3.1)*.25})`);   // atribut transform langsung: titik asal (0,0) lokal
+  const rot=(d/18)*57.3;wheels.forEach(w=>{if(!w.__b)w.__b=w.getAttribute('transform');w.setAttribute('transform',`${w.__b} rotate(${rot%360})`);});
+  const [z,cx,cy]=camAt(t);$('#sideCam').setAttribute('transform',`translate(960 540) scale(${z*(1+Math.sin(t*.9)*.006)}) translate(${-cx} ${-cy})`);
+  renderMap(t);}
+gsap.ticker.add(render);
+
+/* ---------- kontrol: autoplay + loop, tanpa player. ?debug=1 = panel scrub, ?clean=1 = untuk export (tidak autoplay) ---------- */
+const q=new URLSearchParams(location.search),vo=$('#vo'),hasVO=!!vo.getAttribute('src');let audioOn=false;
+function start(){tl.play(0);if(hasVO){vo.currentTime=0;vo.play().then(()=>audioOn=true).catch(()=>{});}}
+tl.eventCallback('onComplete',()=>start());                 // loop
+gsap.ticker.add(()=>{if(!audioOn||tl.paused())return;if(Math.abs(vo.currentTime-tl.time())>.12)vo.currentTime=tl.time();});
+window.OPENER={W,H,DURATION:DUR,tl,ready:false,seek(t){tl.pause(t,false);applyCam();render();},play:start};
+addEventListener('keydown',e=>{if(/^[rR]$/.test(e.key))start();if(e.code==='Space'){e.preventDefault();tl.paused()?tl.play():tl.pause();}});
+if(q.has('debug')){const dbg=$('#dbg');dbg.style.display='flex';const sc=$('#dScrub'),ck=$('#dClock');let drag=false;
+  gsap.ticker.add(()=>{if(!drag)sc.value=String(tl.time()/DUR*1000);ck.textContent=tl.time().toFixed(2)+'s';$('#dPlay').textContent=tl.paused()?'Play':'Pause';});
+  sc.addEventListener('pointerdown',()=>{drag=true;tl.pause();});addEventListener('pointerup',()=>drag=false);
+  sc.addEventListener('input',()=>{tl.pause();tl.time(sc.value/1000*DUR);});$('#dPlay').onclick=()=>tl.paused()?tl.play():tl.pause();}
+document.fonts.ready.then(()=>{render();window.OPENER.ready=true;if(q.has('clean'))return;
+  if(!hasVO){start();return;}
+  /* ada suara: coba mulai langsung; bila autoplay diblokir, tahan frame 0 dan mulai pada klik/tombol pertama (tanpa teks petunjuk) */
+  vo.play().then(()=>{audioOn=true;vo.currentTime=0;tl.play(0);}).catch(()=>{const go=()=>{removeEventListener('pointerdown',go);removeEventListener('keydown',go);start();};addEventListener('pointerdown',go);addEventListener('keydown',go);});});
+</script>
+</body>
+</html>

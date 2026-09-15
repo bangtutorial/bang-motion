@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="id">
+<!-- Made with the Bang Motion skill v1.4.0 by Bang Tutorial (https://youtube.com/bangtutorial) - MIT - https://github.com/bangtutorial/bang-motion -->
+<head>
+<meta charset="utf-8">
+<title>Starter Explainer — Kartun Panggung</title>
+<!--
+  Gaya 6: kartun panggung (references/kartun-panggung.md).
+    - SATU PANGGUNG PER ADEGAN seukuran frame; kamera per panggung, zoom 1,08–1,95, tidak pernah wide.
+    - Kontinu di dalam panggung (isinya beraksi), CUT atau GESER 96/72 px + blur ≤10 di antaranya.
+    - Rig sendi: transform ditulis manual lewat J() — JANGAN pakai transformOrigin/rotation GSAP pada sendi,
+      JANGAN tween x/y GSAP pada grup yang punya translate (grup penempatan ≠ grup yang dianimasikan).
+    - Nol caption; teks hanya diegetik (plat, papan). Palet flat cerah, tanpa kertas/grain.
+    - character(): tubuh vektor + kepala vektor sederhana; ganti ke kepala raster (HEADS + IMG) bila ada.
+  Contoh: 2 panggung, 12 dtk, tanpa VO. Ganti isi panggung dan koreografinya; pertahankan polanya.
+  Autoplay + loop TANPA player; ?debug=1 panel scrub; ?clean=1 tahan untuk export; suara: isi src #vo.
+-->
+<style>
+html,body{margin:0;height:100%;background:#1D303C;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;overflow:hidden;background:#F4EFE0}
+#world{position:absolute;inset:0;will-change:filter}
+#dbg{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:none;gap:12px;align-items:center;padding:10px 16px;border-radius:14px;background:rgba(14,16,22,.9);color:#cfd5e3;font:13px system-ui;z-index:50}
+#dbg input{width:420px}#dbg span{font-variant-numeric:tabular-nums;min-width:7ch}
+</style>
+</head>
+<body>
+<div id="stage"><div id="world"><svg id="scene" width="1920" height="1080" viewBox="0 0 1920 1080" style="position:absolute;inset:0" font-family="system-ui,sans-serif"></svg></div>
+<div id="dbg"><button id="dPlay">Pause</button><input id="dScrub" type="range" min="0" max="1000" value="0"><span id="dClock">0.00s</span></div></div>
+<audio id="vo" src="" preload="auto"></audio>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const W=1920,H=1080,DUR=12,NS='http://www.w3.org/2000/svg',XL='http://www.w3.org/1999/xlink';
+/* palet flat cerah — ganti dari tema, tapi tetap TANPA tekstur */
+const C={cream:'#FFF3DC',white:'#FFFDF5',navy:'#345867',deep:'#172E3C',teal:'#237C80',mint:'#8DD3C3',blue:'#5AABB8',gold:'#F4BC52',
+  coral:'#E0714F',rust:'#C86545',ink:'#263746',grass:'#B9CD8E',grass2:'#9DB874',sand:'#E6D5AC',sand2:'#D6BF8E',skin:'#CB895F',
+  wall:'#EDE6D3',wall2:'#DCD3BE',metal:'#A9B5B3',steam:'#F7F4EA',skyA:'#BFDDE3',skyB:'#F6EFDD',hill:'#CFE0CC'};
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H);$('#stage').style.transform=`translate(-50%,-50%) scale(${s})`;}addEventListener('resize',fit);fit();
+
+/* ---------- penyusun bentuk ---------- */
+const S=$('#scene');
+function N(tag,a={},p=S){const n=document.createElementNS(NS,tag);for(const k in a)n.setAttribute(k,a[k]);p.appendChild(n);return n;}
+const G=(a={},p=S)=>N('g',a,p),R=(x,y,w,h,f,rx=0,p=S,a={})=>N('rect',{x,y,width:w,height:h,rx,fill:f,...a},p),
+  CI=(cx,cy,r,f,p=S,a={})=>N('circle',{cx,cy,r,fill:f,...a},p),EL=(cx,cy,rx,ry,f,p=S,a={})=>N('ellipse',{cx,cy,rx,ry,fill:f,...a},p),
+  PA=(d,f,p=S,a={})=>N('path',{d,fill:f||'none',...a},p),
+  LN=(d,st,w,p=S,a={})=>N('path',{d,fill:'none',stroke:st,'stroke-width':w,'stroke-linecap':'round','stroke-linejoin':'round',...a},p),
+  TX=(x,y,t,size,f,p=S,a={})=>{const n=N('text',{x,y,'font-size':size,fill:f,'font-weight':700,'text-anchor':'middle',...a},p);n.textContent=t;return n;},
+  IMG=(href,x,y,w,h,p=S,a={})=>{const n=N('image',{x,y,width:w,height:h,...a},p);n.setAttributeNS(XL,'href',href);n.setAttribute('href',href);return n;},
+  shadow=(x,y,rx,p=S)=>EL(x,y,rx,16,C.deep,p,{opacity:.13}),
+  sh=(hex,f)=>{const n=parseInt(hex.slice(1),16);const r=Math.round(((n>>16)&255)*f),g=Math.round(((n>>8)&255)*f),b=Math.round((n&255)*f);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);};
+/* SENDI: transform manual → sumbu putar = titik asal lokal (bukan bbox) */
+function J(el,tx=0,ty=0){const j={el,tx,ty,x:0,y:0,r:0,sx:1,sy:1,apply(){el.setAttribute('transform',`translate(${j.tx+j.x},${j.ty+j.y}) rotate(${j.r}) scale(${j.sx},${j.sy})`);}};j.apply();return j;}
+const defsS=N('defs',{},S),grad=N('linearGradient',{id:'skyG',x1:0,y1:0,x2:0,y2:1},defsS);N('stop',{offset:0,'stop-color':C.skyA},grad);N('stop',{offset:1,'stop-color':C.skyB},grad);
+
+/* ---------- panggung: satu frame per adegan, kamera sendiri ---------- */
+const scenes=[];
+function scene(name){const g=G({'data-name':name},S);g.style.display='none';const sc={name,g,cam:{x:960,y:540,z:1.1,ox:0,oy:0},
+  apply(){const c=sc.cam;g.setAttribute('transform',`translate(${960-(c.x+c.ox)*c.z},${540-(c.y+c.oy)*c.z}) scale(${c.z})`);}};sc.apply();scenes.push(sc);return sc;}
+const skyOf=(p,y0=-1400,y1=1080)=>R(-600,y0,3200,y1-y0,'url(#skyG)',0,p);
+const hillsOf=(p,b)=>PA(`M-600 ${b} L-200 ${b-140} L300 ${b-60} L800 ${b-200} L1300 ${b-90} L1800 ${b-180} L2500 ${b-70} L2500 1400 L-600 1400 Z`,C.hill,p);
+const groundOf=(p,gy)=>{R(-600,gy+18,3200,600,C.sand,0,p);R(-600,gy,3200,26,C.grass2,0,p);R(-600,gy-6,3200,14,C.grass,0,p);};
+
+/* ---------- KARAKTER: rig sendi (kaki di y=0) ---------- */
+const HEADS={};   // isi bila punya kepala raster: {pria:{bbox:[x0,y0,x1,y1]}} + berkas karakter/<who>-<ekspresi>[-kedip].png
+function character(p,x,ground,scale,{who='vektor',shirt=C.teal,pants=C.cream,shoes='#2C2A2E',hair=C.ink}={}){
+  const sd=shadow(x,ground+4,72*scale,p),place=G({transform:`translate(${x},${ground}) scale(${scale})`},p),rootEl=G({},place),root=J(rootEl),ref={root,place,who,scale,sd};
+  for(const side of ['R','L']){const sx=side==='L'?-26:26,dk=side==='R'?.86:1;
+    const tEl=G({},rootEl),thigh=J(tEl,sx,-214);R(-24,-10,48,118,sh(pants,dk),21,tEl);
+    const sEl=G({},tEl),shin=J(sEl,0,102);R(-21,-8,42,108,sh(pants,dk),18,sEl);
+    const fEl=G({},sEl),foot=J(fEl,0,96);PA('M -24 -10 L 16 -10 C 24 4 46 4 50 16 L 50 26 L -26 26 Z',sh(shoes,dk),fEl);
+    ref[side+'thigh']=thigh;ref[side+'shin']=shin;ref[side+'foot']=foot;}
+  const tEl=G({},rootEl),torso=J(tEl,0,-214);ref.torso=torso;
+  const arm=(side,front)=>{const s=side==='L'?-1:1,aEl=G({},tEl),a=J(aEl,50*s,-126);R(-17,-16,34,98,front?shirt:sh(shirt,.86),16,aEl);
+    const fEl=G({},aEl),f=J(fEl,0,78);R(-15,-12,30,90,front?C.skin:sh(C.skin,.9),14,fEl);const hEl=G({},fEl),h=J(hEl,0,74);EL(0,4,17,21,front?C.skin:sh(C.skin,.9),hEl);
+    ref[side+'arm']=a;ref[side+'fore']=f;ref[side+'hand']=h;};
+  arm('R',false);
+  PA('M -48 -152 C -64 -144 -70 -112 -66 -76 L -58 8 C -28 22 32 22 60 8 L 67 -76 C 71 -112 60 -144 45 -152 Z',shirt,tEl);
+  PA('M 46 -146 C 64 -130 68 -100 64 -62 L 57 8 L 36 12 L 40 -140 Z',sh(shirt,.88),tEl);R(-15,-178,30,40,C.skin,12,tEl);R(-58,-2,117,22,sh(shirt,.82),9,tEl);
+  arm('L',true);
+  const hEl=G({},tEl),head=J(hEl,0,-160);ref.head=head;ref.faces={};
+  if(HEADS[who]){const hb=HEADS[who].bbox,hw=hb[2]-hb[0],cx=(hb[0]+hb[2])/2,cy=hb[3],hs=150/hw,hg=G({transform:`translate(${-cx*hs},${-cy*hs+14}) scale(${hs})`},hEl);
+    for(const e of ['senang','cemas','kaget']){const g=G({opacity:e==='senang'?1:0},hg);IMG(`karakter/${who}-${e}.png`,0,0,1024,1024,g);const b=IMG(`karakter/${who}-${e}-kedip.png`,0,0,1024,1024,g,{opacity:0});ref.faces[e]={g,blink:b};}}
+  else{ /* kepala vektor sederhana: kulit, siluet rambut, dua titik mata, mulut */
+    EL(-72,-70,13,20,C.skin,hEl);EL(72,-70,13,20,C.skin,hEl);PA('M -74 -120 C -74 -180 74 -180 74 -120 L 74 -60 C 74 -6 -74 -6 -74 -60 Z',C.skin,hEl);
+    PA('M -76 -110 C -80 -175 80 -175 76 -110 L 62 -104 C 20 -130 -10 -120 -50 -108 Z',hair,hEl);
+    const eyes=G({},hEl),ej=J(eyes,0,-86);ref.eyes=ej;CI(-28,0,7,C.ink,eyes);CI(28,0,7,C.ink,eyes);
+    LN('M -40 -104 C -33 -110 -22 -110 -16 -106',C.ink,4,hEl);LN('M 16 -106 C 22 -110 33 -110 40 -104',C.ink,4,hEl);
+    ref.mouth=LN('M -16 -46 C -6 -36 6 -36 16 -46',C.ink,5,hEl);}
+  return ref;}
+
+/* ---------- mesin animasi ---------- */
+const tl=gsap.timeline({paused:true}),world=$('#world');
+const show=(t,at,d=.5)=>tl.fromTo(t,{opacity:0},{opacity:1,duration:d,ease:'power2.out',immediateRender:false},at),hide=(t,at,d=.4)=>tl.to(t,{opacity:0,duration:d,ease:'power2.in'},at);
+const rot=(j,at,v,dur,ease='power2.inOut')=>tl.to(j,{r:v,duration:dur,ease,onUpdate:j.apply},at);
+const sway=(j,at,v,dur)=>tl.to(j,{r:v,duration:dur,ease:'sine.inOut',yoyo:true,repeat:-1,onUpdate:j.apply},at);
+const spin=(j,at,period)=>tl.fromTo(j,{r:0},{r:360,duration:period,ease:'none',repeat:-1,onUpdate:j.apply,immediateRender:false},at);
+/* partikel: satu tween gerak + satu tween opacity berkeyframe (dua tween opacity tak-hingga saling menimpa) */
+const drift=(el,at,{y=-200,scale=null,dur=3,peak=.8}={})=>{const to={y,duration:dur,ease:'sine.out',repeat:-1,immediateRender:false};if(scale!=null)to.scale=scale;
+  tl.fromTo(el,{y:0,scale:scale!=null?.5:1,transformOrigin:'50% 50%'},to,at);tl.to(el,{keyframes:{opacity:[0,peak,peak,0],easeEach:'none'},duration:dur,repeat:-1,ease:'none'},at);};
+/* tetes mengikuti jalur pipa (parametrik) */
+function flowAlong(drops,pathD,at,period){const p=N('path',{d:pathD},defsS),L=p.getTotalLength();drops.forEach((d,i)=>{const o={q:i/drops.length};tl.set(d,{opacity:1},at);
+  tl.to(o,{q:i/drops.length+1,duration:period,ease:'none',repeat:-1,onUpdate(){const pt=p.getPointAtLength((o.q%1)*L);d.setAttribute('cx',pt.x);d.setAttribute('cy',pt.y);}},at);});}
+/* kamera: tahan → satu gerak per beat → tahan; zoom 1,08–1,95 */
+const cam=(sc,at,x,y,z,dur=1.6,ease='sine.inOut')=>tl.to(sc.cam,{x,y,z,duration:dur,ease,onUpdate:sc.apply},at);
+/* pergantian panggung */
+function cut(at,from,to){tl.set(from.g,{display:'none'},at);tl.set(to.g,{display:'block'},at);}
+function slide(at,from,to,axis='x',dist=96){const o=axis==='x'?'ox':'oy';
+  tl.to(from.cam,{[o]:-dist,duration:.28,ease:'power2.in',onUpdate:from.apply},at);tl.set(to.cam,{[o]:dist},at+.28);cut(at+.28,from,to);
+  tl.to(to.cam,{[o]:0,duration:.42,ease:'power3.out',onUpdate:to.apply},at+.28);
+  const b={v:0};tl.to(b,{v:10,duration:.28,ease:'power2.in',onUpdate(){world.style.filter=`blur(${b.v}px)`}},at);
+  tl.to(b,{v:0,duration:.42,ease:'power3.out',onUpdate(){world.style.filter=b.v>.05?`blur(${b.v}px)`:'none'}},at+.28);}
+/* karakter: idle (napas, kedip tiap ≈3,5 dtk), ekspresi, jalan */
+function idle(ch,from){sway(ch.torso,from,1.1,1.7);sway(ch.head,from+.3,-1.7,2.3);sway(ch.Rarm,from+.5,-1.5,1.9);
+  const kf=[{duration:3.3+ch.who.length*.11},{duration:.01},{duration:.13},{duration:.01}];
+  if(ch.eyes)tl.to(ch.eyes,{keyframes:kf.map((k,i)=>({sy:i===1||i===2?.06:1,...k})),repeat:-1,ease:'none',onUpdate:ch.eyes.apply},from);
+  for(const e in ch.faces)tl.to(ch.faces[e].blink,{keyframes:kf.map((k,i)=>({opacity:i===1||i===2?1:0,...k})),repeat:-1,ease:'none'},from);}
+const face=(ch,e,at)=>{for(const k in ch.faces)tl.to(ch.faces[k].g,{opacity:k===e?1:0,duration:.08},at);
+  if(ch.mouth)tl.to(ch.mouth,{attr:{d:e==='cemas'?'M -16 -36 C -6 -46 6 -46 16 -36':e==='kaget'?'M -8 -46 C -8 -30 8 -30 8 -46 Z':'M -16 -46 C -6 -36 6 -36 16 -46'},duration:.1},at);};
+function walk(ch,at,dur,dx){const n=Math.max(1,Math.round(dur/.39));
+  tl.to(ch.root,{x:'+='+dx,duration:dur,ease:'none',onUpdate:ch.root.apply},at);tl.to(ch.sd,{x:'+='+dx*ch.scale,duration:dur,ease:'none'},at);
+  const leg=(j,a,b)=>tl.fromTo(j,{r:a},{r:b,duration:.39,ease:'sine.inOut',yoyo:true,repeat:n-1,onUpdate:j.apply,immediateRender:false},at);
+  leg(ch.Lthigh,-15,15);leg(ch.Rthigh,15,-15);leg(ch.Lshin,0,18);leg(ch.Rshin,18,0);leg(ch.Larm,12,-12);
+  tl.fromTo(ch.root,{y:0},{y:-4,duration:.195,ease:'sine.inOut',yoyo:true,repeat:n*2-1,onUpdate:ch.root.apply,immediateRender:false},at);
+  [ch.Lthigh,ch.Rthigh,ch.Lshin,ch.Rshin,ch.Larm].forEach(j=>rot(j,at+dur,0,.3));}
+
+/* ================= PANGGUNG 1 — halaman: tokoh menunjuk, jemuran, ayam ================= */
+const P1=scene('halaman');{const p=P1.g,gy=1000;skyOf(p);hillsOf(p,760);groundOf(p,gy);
+  const h=G({transform:`translate(-80,${gy})`},p);R(0,-560,900,560,C.wall,0,h);PA('M -34 -560 L 450 -780 L 934 -560 Z',C.coral,h);R(150,-400,210,210,C.blue,6,h);R(560,-390,210,390,C.navy,6,h);
+  const lg=G({transform:`translate(1180,${gy})`},p);R(-6,-260,12,262,'#8A6A4A',4,lg);R(214,-260,12,262,'#8A6A4A',4,lg);LN('M0 -250 L220 -250',C.deep,4,lg);
+  P1.clothes=[[20,C.gold],[90,C.blue],[160,C.coral]].map(([x,f])=>{const c=G({},lg);R(-25,0,50,70,f,8,c);return J(c,x+25,-248);});
+  const cp=G({transform:`translate(1520,${gy})`},p),cb=G({},cp);P1.chick=cb;EL(0,-28,26,18,C.cream,cb);CI(20,-44,12,C.cream,cb);PA('M30 -44 L42 -40 L30 -36 Z',C.gold,cb);CI(24,-47,2.5,C.ink,cb);
+  const legs=G({},cb);P1.legs=J(legs,0,-12);LN('M-6 0 L-6 14',C.gold,3,legs);LN('M8 0 L8 14',C.gold,3,legs);
+  P1.w=character(p,760,gy,1.0);
+  const sg=G({transform:'translate(1300,700)'},p),sign=G({},sg);R(-6,0,12,300,'#8A6A4A',4,sign);R(-110,-50,220,90,C.cream,10,sign);R(-110,-50,220,90,'none',10,sign,{stroke:C.navy,'stroke-width':6});TX(0,10,'GANTI',40,C.navy,sign,{'letter-spacing':3});}
+
+/* ================= PANGGUNG 2 — ruang mesin: dinding terangkat, lampu, kipas, tetes di pipa ================= */
+const P2=scene('mesin');{const p=P2.g,gy=920;skyOf(p);hillsOf(p,740);groundOf(p,gy);
+  const b=G({transform:`translate(260,${gy})`},p);shadow(700,4,600,b);R(0,-600,1400,600,C.wall,0,b);R(0,-600,1400,26,C.wall2,0,b);
+  P2.racks=G({opacity:0},b);R(20,-570,1360,530,'#DDE4DE',0,P2.racks);P2.lights=[];P2.fans=[];
+  for(let r=0;r<6;r++){const bx=80+r*190;R(bx,-540,150,460,C.navy,10,P2.racks);R(bx+14,-524,122,428,C.deep,0,P2.racks);
+    for(let i=0;i<10;i++)P2.lights.push(R(bx+24,-512+i*36,34,13,i%3?C.mint:C.gold,6,P2.racks,{opacity:0}));
+    const fg=G({transform:`translate(${bx+75},-110)`},P2.racks);CI(0,0,22,'#0F2A33',fg);const bl=G({},fg);for(let k=0;k<3;k++)R(-20,-5,40,10,C.mint,5,bl,{transform:`rotate(${k*60})`});P2.fans.push(J(bl));}
+  P2.wall=G({},b);R(0,-574,1400,534,C.wall,0,P2.wall);[.35,.5,.65].forEach(f=>R(30,-600*f,1340,12,C.wall2,6,P2.wall));
+  R(570,-252,260,64,C.navy,12,P2.wall);TX(700,-208,'PLAT NAMA',34,C.cream,P2.wall,{'letter-spacing':4});
+  P2.feedPath='M100 60 L100 -700 L400 -700';LN(P2.feedPath,C.navy,22,b);LN(P2.feedPath,C.blue,10,b);P2.drops=[];for(let i=0;i<7;i++)P2.drops.push(CI(0,0,7,C.cream,b,{opacity:0}));
+  const u=G({transform:'translate(600,-680)'},b);R(0,0,100,70,C.metal,10,u);CI(50,34,26,C.deep,u);const bl=G({},u);P2.roofFan=J(bl,50,34);for(let k=0;k<3;k++)R(-22,-5,44,10,C.cream,5,bl,{transform:`rotate(${k*60})`});
+  P2.puffs=[];for(let i=0;i<16;i++)P2.puffs.push(CI(650+((i*67)%100)-50,-720,30+((i*29)%30),C.steam,b,{opacity:0}));}
+
+/* ================= KOREOGRAFI (contoh 12 dtk; saat dipakai, kunci ke jeda VO) ================= */
+tl.set(P1.g,{display:'block'},0);P1.cam.x=820;P1.cam.y=640;P1.cam.z=1.75;P1.apply();
+idle(P1.w,0);P1.clothes.forEach((c,i)=>sway(c,i*.2,6,1.3+i*.15));
+tl.to(P1.chick,{x:180,duration:4,ease:'none',yoyo:true,repeat:-1},0);sway(P1.legs,0,12,.18);tl.to(P1.chick,{y:-3,duration:.18,yoyo:true,repeat:-1,ease:'sine.inOut'},0);
+rot(P1.w.Rarm,.6,-72,.7);rot(P1.w.Rfore,.7,-18,.8);rot(P1.w.head,.6,7,.8);         // menunjuk ke papan
+cam(P1,.5,900,640,1.4,2.2,'power2.inOut');                                              // tahan → satu gerak → tahan
+walk(P1.w,3.2,1.56,220);face(P1.w,'kaget',4.9);
+slide(5.8,P1,P2,'x',96);                                                                 // geser 96 px ke panggung 2
+P2.cam.x=960;P2.cam.y=520;P2.cam.z=1.1;P2.apply();spin(P2.roofFan,5.8,1.1);flowAlong(P2.drops,P2.feedPath,5.8,2.2);
+P2.puffs.forEach((p,i)=>drift(p,5.8+((i*.29)%1)*4,{y:-420,scale:1.5,dur:4,peak:.85}));
+cam(P2,6.6,960,660,1.42,1.6,'power2.inOut');tl.set(P2.racks,{opacity:1},7.2);tl.to(P2.wall,{y:-560,duration:.9,ease:'power3.inOut'},7.2);
+P2.lights.forEach((l,i)=>{const at=7.8+i*.035;tl.to(l,{opacity:1,duration:.1,ease:'none'},at);tl.to(l,{keyframes:{opacity:[1,.3,1,.55,1],easeEach:'none'},duration:1.5,repeat:-1,ease:'none'},at+.1);});
+P2.fans.forEach((f,i)=>spin(f,8.0+i*.08,.85));
+tl.to({},{duration:.01},DUR);
+
+/* ---------- kontrol: autoplay + loop tanpa player; ?debug=1 panel; ?clean=1 export ---------- */
+const q=new URLSearchParams(location.search),vo=$('#vo'),hasVO=!!vo.getAttribute('src');let audioOn=false;
+function applyAll(){scenes.forEach(s=>s.apply());}
+function start(){tl.play(0);if(hasVO){vo.currentTime=0;vo.play().then(()=>audioOn=true).catch(()=>{});}}
+tl.eventCallback('onComplete',()=>start());
+gsap.ticker.add(()=>{if(!audioOn||tl.paused())return;if(Math.abs(vo.currentTime-tl.time())>.12)vo.currentTime=tl.time();});
+window.OPENER={W,H,DURATION:DUR,tl,ready:false,seek(t){tl.pause(t,false);applyAll();if(gsap.ticker.tick)gsap.ticker.tick();},play:start};
+addEventListener('keydown',e=>{if(/^[rR]$/.test(e.key))start();if(e.code==='Space'){e.preventDefault();tl.paused()?tl.play():tl.pause();}});
+if(q.has('debug')){const dbg=$('#dbg');dbg.style.display='flex';const sc=$('#dScrub'),ck=$('#dClock');let drag=false;
+  gsap.ticker.add(()=>{if(!drag)sc.value=String(tl.time()/DUR*1000);ck.textContent=tl.time().toFixed(2)+'s';$('#dPlay').textContent=tl.paused()?'Play':'Pause';});
+  sc.addEventListener('pointerdown',()=>{drag=true;tl.pause();});addEventListener('pointerup',()=>drag=false);
+  sc.addEventListener('input',()=>{tl.pause();tl.time(sc.value/1000*DUR);});$('#dPlay').onclick=()=>tl.paused()?tl.play():tl.pause();}
+document.fonts.ready.then(()=>{applyAll();window.OPENER.ready=true;if(q.has('clean'))return;if(!hasVO){start();return;}
+  vo.play().then(()=>{audioOn=true;vo.currentTime=0;tl.play(0);}).catch(()=>{const go=()=>{removeEventListener('pointerdown',go);removeEventListener('keydown',go);start();};addEventListener('pointerdown',go);addEventListener('keydown',go);});});
+</script>
+</body>
+</html>

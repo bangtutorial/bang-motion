@@ -1,0 +1,32 @@
+{
+  "name": "bang-motion",
+  "description": "Bang Motion — an agent skill for browser motion graphics that move like video, not slides.",
+  "owner": {
+    "name": "Bang Tutorial"
+  },
+  "plugins": [
+    {
+      "name": "bang-motion",
+      "source": "./",
+      "displayName": "Bang Motion",
+      "description": "Openers, promos, bumpers, kinetic typography, and five explainer styles — built as a single index.html that autoplays and loops. Style is derived from the brand via a required style brief, never inherited from the starter or a reference.",
+      "version": "1.17.0",
+      "author": {
+        "name": "Bang Tutorial",
+        "url": "https://youtube.com/bangtutorial"
+      },
+      "homepage": "https://github.com/bangtutorial/bang-motion",
+      "license": "MIT",
+      "keywords": [
+        "motion-graphics",
+        "explainer",
+        "opener",
+        "promo",
+        "animation",
+        "kinetic-typography",
+        "gsap",
+        "video"
+      ]
+    }
+  ]
+}

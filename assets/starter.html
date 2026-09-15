@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="id">
+<!-- Made with the Bang Motion skill v1.0.0 by Bang Tutorial (https://youtube.com/bangtutorial) - MIT - https://github.com/bangtutorial/bang-motion -->
+<head>
+<meta charset="utf-8">
+<title>Bang Motion — Starter</title>
+<!--
+  STARTER OPENER / PROMO / BUMPER / TYPOGRAPHY — satu berkas.
+  Ini ARSITEKTUR, bukan gaya: stage 1920x1080, rig kamera #world, scene Three.js
+  ber-state, helper timeline, autoplay + loop tanpa player (?debug=1 = panel).
+
+  =====  STYLE BRIEF — isi dulu, baru sentuh kode (SKILL.md Hukum #3)  =====
+  Tema/produk + 3 kata sifat : ____________________
+  Palet (dari brand)          : utama #______  latar #______  aksen #______
+  Font display / pendamping   : ____________  / ____________   (bukan Poppins/Inter/Roboto/Montserrat)
+  Bahasa latar (1 arah)       : sinematik gelap | poster color-block | editorial terang | kertas & cetak |
+                                retro analog | brutalis mono | pastel ceria | mewah gelap
+  Tanda tangan gerak (objek)  : ____________________
+  Gerak latar (menu §7c)      : ____________________
+  Permukaan latar (menu §7d)  : ____________________   (gradien/cahaya/tekstur, bukan flat)
+  Transisi (menu §4c, ≥2 jenis, ≥1 3D) : ____________________   (tanpa balok/persegi datar menyapu)
+  Momen istimewa              : ____________________
+  ==========================================================================
+
+  Semua warna di bawah sengaja ABU-ABU dan fontnya font sistem: kalau masih
+  terlihat di hasil, gaya belum diturunkan dari tema. Latar WebGL (nebula,
+  debu, grid, bloom) hanya SATU bahasa latar; untuk arah lain matikan
+  (S.grid/dust/stars = 0, sembunyikan #gl, ganti latar #stage/.bgfx).
+  GERAK LATAR dipilih dari menu techniques.md §7c (isi di style brief) — jangan
+  otomatis "benda melintas ke samping"; itu sudah dipakai dua proyek berturut.
+  Jangan meniru kulit video referensi dan jangan membuka proyek lama.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- GANTI: font display sesuai style brief, mis. https://fonts.googleapis.com/css2?family=NAMA+FONT:wght@700;900&display=swap -->
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+}}
+</script>
+<style>
+:root{
+  /* PLACEHOLDER — wajib diganti dari style brief. Abu-abu = belum diturunkan dari tema. */
+  --accent:#8A8F98; --accent-lit:#C4C8CF;
+  --ink:#F2F3F7; --base:#111318;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;
+  font-family:"Sora",system-ui,sans-serif;color:var(--ink)}   /* GANTI: font display dari style brief */
+#filters{position:fixed;width:0;height:0;opacity:0;pointer-events:none}
+
+/* panggung dipatok 1920x1080, discale ke jendela — komposisi tidak berubah */
+#stage{position:fixed;left:50%;top:50%;width:1920px;height:1080px;
+  transform:translate(-50%,-50%) scale(1);overflow:hidden;background:var(--base)}
+#world{position:absolute;inset:0;will-change:transform}   /* rig kamera */
+#gl{position:absolute;inset:0;width:1920px;height:1080px;display:block}
+.bgfx{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+  background:radial-gradient(70% 42% at 50% 108%,
+    color-mix(in srgb, var(--accent) 34%, transparent),
+    color-mix(in srgb, var(--accent) 12%, transparent) 48%, transparent 70%)}
+#dom{position:absolute;inset:0}
+
+.scene{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;opacity:0;visibility:hidden}
+
+/* state awal tersembunyi DI CSS (tween pakai immediateRender:false).
+   Jangan pernah menulis opacity di selector yang lebih spesifik dari ini. */
+.hero{opacity:0}
+
+.hero-wrap{perspective:1400px}
+.hero.sm{font-size:74px}.hero.md{font-size:92px}.hero.lg{font-size:128px}.hero.xl{font-size:150px;font-weight:600}
+.txt2{display:inline-block;opacity:0}                      /* tanda baca: pop terpisah, ketukan kalimat */
+/* kata sorotan: .hl + SATU varian bentuk (pilih di style brief): pill | under | marker | box | color. Ornamen tidak default. */
+.hl{position:relative;display:inline-block}
+.hl i{position:absolute;transform:scaleX(0);transform-origin:0 50%}
+.hl-t{position:relative;opacity:0}
+.hl.pill{padding:.02em .24em .04em;border-radius:.26em}
+.hl.pill i{inset:0;border-radius:inherit;background:linear-gradient(95deg,color-mix(in srgb,var(--accent) 70%,#000),var(--accent) 60%,var(--accent-lit))}
+.hl.pill .hl-t{color:#fff}
+.hl.under i{left:0;right:0;bottom:-.04em;height:.14em;border-radius:.07em;background:var(--accent)}
+.hl.marker i{left:-.1em;right:-.1em;top:.5em;bottom:-.02em;background:var(--accent);opacity:.55;transform:scaleX(0) rotate(-1.5deg)}
+.hl.box i{inset:-.06em -.14em;border:.04em solid var(--accent);border-radius:.12em;background:none}
+.hl.color .hl-t{color:var(--accent)}
+.hl-orn{position:absolute;width:.46em;height:.46em;right:-.22em;top:-.24em;fill:var(--accent-lit);opacity:0}   /* OPSIONAL: bentuk dari brand */
+.paper{position:absolute;inset:0;opacity:0;visibility:hidden;
+  background:linear-gradient(180deg,#F7FAFF 0%,#EEF4FF 55%,#E6EEFF 100%)}   /* latar terang (contoh; bisa gradien warna palet / blok warna) */
+.paper .b{position:absolute;border-radius:50%;pointer-events:none}
+.paper .b1{left:-260px;top:-380px;width:1100px;height:1100px;background:radial-gradient(circle,color-mix(in srgb,var(--accent-lit) 38%,#fff) 0%,transparent 68%)}
+.paper .b2{left:1180px;top:520px;width:1000px;height:1000px;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 22%,#fff) 0%,transparent 66%)}
+.paper .b3{left:420px;top:700px;width:800px;height:800px;background:radial-gradient(circle,color-mix(in srgb,var(--accent-lit) 26%,#fff) 0%,transparent 66%)}
+.hero.ink{color:#0B1B33;text-shadow:none}                  /* teks untuk latar terang */
+.pocket{position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:radial-gradient(60% 46% at 50% 50%,rgba(0,0,0,.55),transparent 72%)}   /* kantong gelap di bawah teks */
+.hero{font-size:142px;font-weight:500;letter-spacing:-.01em;color:#fff;
+  white-space:nowrap;text-shadow:0 4px 30px rgba(0,0,0,.5)}  /* TANPA glow */
+#line-a,#line-b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.wd{display:inline-block;white-space:nowrap}
+.ch{display:inline-block;will-change:transform,opacity,filter;opacity:0} /* awal 0: cegah flash sebelum tween */
+
+/* light leak: lapisan PALING ATAS (cahaya di depan lensa, bukan bagian dunia) */
+.leak{position:absolute;left:50%;top:50%;width:2400px;height:2400px;
+  margin:-1200px 0 0 -1200px;border-radius:50%;
+  background:radial-gradient(circle,
+    color-mix(in srgb, var(--accent-lit) 85%, white),
+    color-mix(in srgb, var(--accent) 55%, transparent) 34%,
+    transparent 74%);
+  filter:blur(64px);mix-blend-mode:screen;opacity:0;pointer-events:none;z-index:40}
+.vignette{position:absolute;inset:0;pointer-events:none;z-index:10;
+  background:linear-gradient(180deg,rgba(0,0,0,.55),transparent 30%),
+    radial-gradient(ellipse 78% 68% at 50% 52%,transparent 40%,
+      rgba(0,0,0,.6) 86%,rgba(0,0,0,.92) 100%)}
+
+#ui{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:14px;padding:11px 18px;border-radius:16px;
+  background:rgba(14,16,22,.9);border:1px solid rgba(255,255,255,.1);
+  font-size:13px;color:#A0A6B4;z-index:50}
+#ui{display:none}            /* panel developer: tampil hanya dengan ?debug=1 */
+#ui.on{display:flex}
+#ui button{background:#262A34;color:#fff;border:none;padding:8px 16px;
+  border-radius:9px;font:inherit;cursor:pointer}
+#scrub{width:340px;accent-color:var(--accent)}
+#clock{font-variant-numeric:tabular-nums;min-width:5.2ch;text-align:right} /* digit selebar sama: kartu tidak bergetar */
+</style>
+</head>
+<body>
+
+<svg id="filters"><defs></defs></svg>
+
+<div id="stage">
+  <div id="world">
+    <canvas id="gl"></canvas>
+    <div class="bgfx"></div>
+    <div id="dom">
+      <div class="paper" id="paper"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i></div>
+      <div class="pocket" id="pocket"></div>
+      <section class="scene" id="sc-a"><div class="hero-wrap">
+        <!-- hanya .txt yang di-split per huruf; sorotan (.hl) dan tanda baca (.txt2) punya tween sendiri.
+             Ganti varian sorotan (pill/under/marker/box/color) sesuai style brief; jangan tambah ornamen tanpa alasan brand. -->
+        <h1 class="hero md" id="line-a"><span class="txt">Kalimat pertama yang</span>&nbsp;<span class="hl under" id="hl-a"><i></i><span class="hl-t">hidup</span></span><span class="txt2">.</span></h1>
+        <h1 class="hero lg ink" id="line-b"><span class="txt">Kalimat kedua.</span></h1>
+      </div></section>
+      <!-- tambah adegan di sini: satu kalimat + maks satu objek per adegan -->
+    </div>
+  </div>
+  <div class="leak" id="leak"></div>
+  <div class="vignette"></div>
+</div>
+
+<div id="ui">
+  <button id="btn-play">Pause</button><button id="btn-restart">Restart</button>
+  <input id="scrub" type="range" min="0" max="1000" value="0">
+  <span id="clock">0.00s</span>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer }  from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
+
+/* ============ UTIL: split per huruf + motion blur berarah ============ */
+const $=(s,r=document)=>r.querySelector(s);
+const defs=$('#filters defs'); let fc=0;
+function makeBlur(){ // feGaussianBlur dgn stdDeviation x/y terpisah = blur SEARAH gerak
+  const id='mb'+(fc++), NS='http://www.w3.org/2000/svg';
+  const f=document.createElementNS(NS,'filter'); f.id=id;
+  f.setAttribute('x','-70%');f.setAttribute('y','-70%');           // kotak default
+  f.setAttribute('width','240%');f.setAttribute('height','240%');  // memotong ekor
+  const g=document.createElementNS(NS,'feGaussianBlur');
+  g.setAttribute('stdDeviation','0 0'); f.appendChild(g); defs.appendChild(f);
+  return {url:`url(#${id})`,node:g};
+}
+function blurTween(tl,targets,at,from,to,dur,{ease='power3.out',ax=1,ay=.08}={}){
+  const b=makeBlur(),o={v:from};
+  tl.set(targets,{filter:b.url},at);
+  tl.to(o,{v:to,duration:dur,ease,onUpdate(){
+    b.node.setAttribute('stdDeviation',`${(o.v*ax).toFixed(2)} ${(o.v*ay).toFixed(2)}`);}},at);
+  tl.set(targets,{filter:'none'},at+dur); // lepas: filter permanen = raster ulang tiap frame
+}
+const VERT={ax:.1,ay:1};
+function splitChars(el){
+  const words=(el.textContent||'').split(' '); el.textContent=''; const out=[];
+  words.forEach((w,i)=>{
+    const wr=document.createElement('span'); wr.className='wd';
+    for(const c of w){const s=document.createElement('span');s.className='ch';
+      s.textContent=c;wr.appendChild(s);out.push(s);}
+    el.appendChild(wr);
+    if(i<words.length-1){const sp=document.createElement('span');sp.className='ch';
+      sp.innerHTML='&nbsp;';el.appendChild(sp);out.push(sp);}
+  });
+  return out;
+}
+
+/* ============ DUNIA WEBGL BER-STATE (tanpa jam sendiri) ============ */
+const W=1920,H=1080;
+const renderer=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(W,H,false);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+/* SEMUA warna WebGL diturunkan dari token CSS (style brief). Tidak ada warna hardcode di lapisan 3D:
+   ganti --accent/--accent-lit/--base di :root, seluruh dunia ikut. Bentuk ornamen (bintang 4 sudut) juga
+   placeholder — turunkan dari logo/tema (starShape) atau ganti geometrinya. */
+const cssVar=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ACC=new THREE.Color(cssVar('--accent')),ACL=new THREE.Color(cssVar('--accent-lit')),BASE=new THREE.Color(cssVar('--base'));
+const scene=new THREE.Scene(); scene.fog=new THREE.FogExp2(BASE.getHex(),.012);
+const camera=new THREE.PerspectiveCamera(50,W/H,.1,400);
+
+const S={ grid:.3, dust:.5, stars:0, camX:0,camY:0,camZ:16,camRoll:0,
+          bloom:.85, shake:0, heroO:0,heroS:1,heroX:0,heroY:0,heroZ:6 };
+
+/* debu: kelip via sinus per-seed — bukan random per frame */
+{const N=1200,pos=new Float32Array(N*3),seed=new Float32Array(N);
+ for(let i=0;i<N;i++){pos[i*3]=(Math.random()-.5)*90;pos[i*3+1]=(Math.random()-.5)*52;
+   pos[i*3+2]=-Math.random()*60+8;seed[i]=Math.random()*6.283;}
+ const g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ g.setAttribute('aSeed',new THREE.BufferAttribute(seed,1));
+ var dustMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,
+  blending:THREE.AdditiveBlending,
+  uniforms:{uTime:{value:0},uOpacity:{value:.5},uPix:{value:Math.min(devicePixelRatio,2)},uColor:{value:ACL}},
+  vertexShader:`attribute float aSeed;varying float vA;uniform float uTime;uniform float uPix;
+   void main(){vec3 p=position;p.y+=sin(uTime*.35+aSeed)*.9;
+   vec4 mv=modelViewMatrix*vec4(p,1.);vA=.35+.65*abs(sin(uTime*.9+aSeed*3.1));
+   gl_PointSize=(28.*uPix)/(-mv.z);gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`varying float vA;uniform float uOpacity;uniform vec3 uColor;
+   void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;
+   gl_FragColor=vec4(uColor,pow(1.-d*2.,2.4)*vA*uOpacity);}`});
+ scene.add(new THREE.Points(g,dustMat));}
+
+/* grid lantai: fade JAUH sebelum horizon (garis menumpuk = pita terang) */
+const gridMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,
+ blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
+ uniforms:{uTime:{value:0},uOpacity:{value:0},uC1:{value:ACC},uC2:{value:ACL}},
+ vertexShader:`varying vec2 vUv;void main(){vUv=uv;
+  gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+ fragmentShader:`varying vec2 vUv;uniform float uTime;uniform float uOpacity;uniform vec3 uC1;uniform vec3 uC2;
+  void main(){vec2 p=vUv*46.;p.y+=uTime*2.6;
+  vec2 g=abs(fract(p)-.5)/fwidth(p);float line=1.-min(min(g.x,g.y),1.);
+  float d=length(vUv-.5)*2.;float fade=1.-smoothstep(.04,.60,d);
+  gl_FragColor=vec4(mix(uC1,uC2,fade),line*fade*uOpacity);}`});
+const grid=new THREE.Mesh(new THREE.PlaneGeometry(170,170),gridMat);
+grid.rotation.x=-Math.PI/2; grid.position.y=-6.4; scene.add(grid);
+
+/* ornamen 3D: extrude + cahaya (Basic = flat = rasa PPT) */
+scene.add(new THREE.AmbientLight(ACC.clone().multiplyScalar(.45).getHex(),1.1));
+const key=new THREE.DirectionalLight(ACL.getHex(),2.6); key.position.set(5,7,9); scene.add(key);
+function starShape(){const s=new THREE.Shape(),R=1,c=.09; // c kecil = ujung runcing
+ s.moveTo(0,R);s.quadraticCurveTo(c,c,R,0);s.quadraticCurveTo(c,-c,0,-R);
+ s.quadraticCurveTo(-c,-c,-R,0);s.quadraticCurveTo(-c,c,0,R);return s;}
+const starGeo=new THREE.ExtrudeGeometry(starShape(),{depth:.26,bevelEnabled:true,
+ bevelThickness:.06,bevelSize:.07,bevelSegments:3}); starGeo.center();
+const mkMat=()=>new THREE.MeshStandardMaterial({color:ACL.getHex(),emissive:ACC.getHex(),
+ emissiveIntensity:.6,roughness:.28,metalness:.2,transparent:true,opacity:0});
+const AMB=[[-9.5,4.2,-7,.62,.5,.7],[8.6,4.8,-9,.8,-.36,2.1],[-7.2,-3.8,-4,.44,.62,3.9],
+ [9.4,-3.2,-7,.55,-.55,1.3],[5.8,5.9,-3,.34,-.7,.2],[3.4,-5.4,-11,.7,.42,4.4]];
+const ambStars=AMB.map(d=>{const m=new THREE.Mesh(starGeo,mkMat());
+ m.position.set(d[0],d[1],d[2]);m.scale.setScalar(d[3]);m.userData=d;scene.add(m);return m;});
+const heroMat=mkMat();heroMat.emissiveIntensity=.85;
+const heroStar=new THREE.Mesh(starGeo,heroMat);scene.add(heroStar);
+
+const composer=new EffectComposer(renderer); composer.setSize(W,H);
+composer.addPass(new RenderPass(scene,camera));
+/* threshold TINGGI — ambang rendah membuat seluruh frame berkabut putih */
+const bloom=new UnrealBloomPass(new THREE.Vector2(W,H),.8,.7,.52);
+composer.addPass(bloom); composer.addPass(new OutputPass());
+
+function render(t){ // t = tl.time(); TIDAK ADA jam lain di file ini
+  dustMat.uniforms.uTime.value=t; dustMat.uniforms.uOpacity.value=S.dust;
+  gridMat.uniforms.uTime.value=t; gridMat.uniforms.uOpacity.value=S.grid;
+  for(const m of ambStars){const d=m.userData,tw=.45+.55*Math.abs(Math.sin(t*.9+d[5]));
+    m.material.opacity=S.stars*tw; m.visible=m.material.opacity>.01;
+    m.rotation.z=t*d[4]+d[5];
+    m.rotation.y=Math.sin(t*d[4]*1.4+d[5])*.55;  // goyang, bukan putar penuh
+    m.position.y=d[1]+Math.sin(t*.5+d[5])*.5;}
+  heroMat.opacity=S.heroO; heroStar.visible=S.heroO>.01;
+  heroStar.position.set(S.heroX,S.heroY,S.heroZ);
+  heroStar.scale.setScalar(1.6*S.heroS);
+  heroStar.rotation.z=t*.45; heroStar.rotation.y=Math.sin(t*.7)*.6;
+  const sh=S.shake;
+  camera.position.set(S.camX+Math.sin(t*.41)*.22+Math.sin(t*137.2)*sh, // sinus,
+    S.camY+Math.cos(t*.33)*.16+Math.cos(t*111.7)*sh, S.camZ);          // bukan random
+  camera.lookAt(S.camX*.35,S.camY*.35,0); camera.rotation.z+=S.camRoll;
+  bloom.strength=S.bloom;
+  composer.render();
+}
+
+/* ============ TIMELINE — satu-satunya tempat waktu ditulis ============ */
+const DURATION=8.0;
+const tl=gsap.timeline({paused:true});
+const rig=$('#world'), leak=$('#leak');
+
+let leakSide=1;
+const sweep=(at,dur=1.0)=>{ const side=(leakSide*=-1);   // light leak bergantian sisi
+  tl.fromTo(leak,{x:side*1500,y:-240,scale:.85},
+    {x:side*330,y:130,scale:1.12,duration:dur,ease:'sine.out',immediateRender:false},at);
+  tl.fromTo(leak,{opacity:0},{opacity:.85,duration:dur*.4,ease:'sine.in',immediateRender:false},at);
+  tl.to(leak,{opacity:0,duration:dur*.6,ease:'sine.out'},at+dur*.4); };
+
+/* push-through: dorong masuk ke teks lama, cut, tarik mundur dari teks baru.
+   Lompatan scale di titik cut tak terlihat — frame sedang kosong/tertutup leak. */
+const camThrough=(atCut,{push=2,from=1.5,inDur=.5,outDur=.95,
+                         oOut='50% 50%',oIn='50% 50%'}={})=>{
+  tl.set(rig,{transformOrigin:oOut},atCut-inDur);
+  tl.to(rig,{scale:push,duration:inDur,ease:'power2.in'},atCut-inDur);
+  tl.set(rig,{transformOrigin:oIn,scale:from},atCut);
+  tl.to(rig,{scale:1,duration:outDur,ease:'power3.out'},atCut); };
+
+/* ---- tipografi hidup (techniques.md §1): empat pintu + pill sorotan + tanda baca ---- */
+const inUp  =(ch,el,at,{dur=.8,st=.024}={})=>{tl.fromTo(ch,{opacity:0,yPercent:60,scaleY:1.45},{opacity:1,yPercent:0,scaleY:1,duration:dur,ease:'power4.out',stagger:st,immediateRender:false},at);blurTween(tl,el,at,30,0,dur,VERT);};
+const inLeft=(ch,el,at,{dur=.75,st=.02}={})=>{tl.fromTo(ch,{opacity:0,xPercent:-45},{opacity:1,xPercent:0,duration:dur,ease:'power4.out',stagger:st,immediateRender:false},at);blurTween(tl,el,at,50,0,dur,{ease:'power4.out'});};
+const outUp =(ch,el,at,{dur=.4,st=.01}={})=>{tl.to(ch,{opacity:0,yPercent:-70,duration:dur,ease:'power2.in',stagger:st},at);blurTween(tl,el,at,0,45,dur+.1,{ease:'power2.in',...VERT});};
+const outLeft=(ch,el,at,{dur=.4,st=.01}={})=>{tl.to(ch,{opacity:0,xPercent:-60,duration:dur,ease:'power2.in',stagger:st},at);blurTween(tl,el,at,0,55,dur+.1,{ease:'power2.in'});};
+const mark=(hl,at)=>{const i=$('i',hl);if(i)tl.fromTo(i,{scaleX:0},{scaleX:1,duration:.5,ease:'power3.out',immediateRender:false},at);   // bidang/garis sorotan, varian apa pun
+  tl.fromTo($('.hl-t',hl),{opacity:0,yPercent:60},{opacity:1,yPercent:0,duration:.7,ease:'power4.out',immediateRender:false},at);
+  const orn=$('.hl-orn',hl);if(orn)tl.fromTo(orn,{opacity:0,scale:.2,rotate:-40},{opacity:1,scale:1,rotate:0,duration:.5,ease:'back.out(2)',immediateRender:false},at+.22);};
+const popDot=(el,at)=>tl.fromTo(el,{opacity:0,yPercent:60},{opacity:1,yPercent:0,duration:.5,ease:'power4.out',immediateRender:false},at);
+
+/* ---- ADEGAN CONTOH: dua kalimat, satu cut; arah masuk & ukuran BERBEDA tiap adegan ---- */
+const scA=$('#sc-a'), la=$('#line-a'), lb=$('#line-b');
+const aCh=splitChars($('.txt',la)), bCh=splitChars($('.txt',lb));
+
+tl.set(S,{grid:0,dust:.15,stars:0,heroO:0,heroS:.16,camZ:30,camRoll:.3,bloom:1.1},0);
+tl.to(S,{heroO:1,heroS:1,duration:1.05,ease:'back.out(1.7)'},.25);   // ornamen mekar
+tl.to(S,{stars:.85,dust:.6,grid:.25,camZ:13.2,camRoll:0,bloom:.85,
+         duration:2.6,ease:'power2.inOut'},.3);
+
+tl.set(scA,{autoAlpha:1},1.4);
+tl.fromTo(rig,{scale:1.6},{scale:1,duration:1.2,ease:'power3.out',immediateRender:false},1.5);
+tl.set(la,{autoAlpha:1},1.5);
+tl.to('#pocket',{opacity:1,duration:.6},1.3);                        // kantong gelap menyala bersama teks
+inUp(aCh,la,1.55); mark($('#hl-a'),2.15); popDot($('.txt2',la),2.45);
+tl.to(S,{heroX:-5.6,heroY:-2.2,heroS:.62,duration:1,ease:'power3.inOut'},1.4);
+
+outLeft(aCh,la,3.6); tl.to(['#hl-a','.txt2'],{opacity:0,x:-60,duration:.4,ease:'power2.in'},3.6);
+tl.set(la,{autoAlpha:0},4.2);
+sweep(3.7,.9); camThrough(4.0,{push:1.9,from:1.45});
+/* CONTOH ganti latar di balik cut: gelap → terang (techniques.md §7b). Kertas hanya contoh — bisa gradien terang,
+   warna lembut, blok warna. Ganti latar hanya bila segmennya berganti mood/topik; putuskan di style brief. Di t=0 dikembalikan untuk loop. */
+tl.set('#paper',{autoAlpha:0},0); tl.set(['#gl','.vignette','.bgfx'],{opacity:1},0);
+tl.set('#paper',{autoAlpha:1},4.0); tl.to('#gl',{opacity:0,duration:.25},4.0);
+tl.to('.vignette',{opacity:.35,duration:.4},4.0); tl.to('.bgfx',{opacity:0,duration:.25},4.0);
+tl.to('#pocket',{opacity:0,duration:.3},3.9);
+tl.to('.paper .b',{x:60,y:-40,duration:3,ease:'sine.inOut',yoyo:true,repeat:1,stagger:.4},4.0);
+
+tl.set(lb,{autoAlpha:1},3.98);
+inLeft(bCh,lb,4.05);
+
+outUp(bCh,lb,6.6);
+tl.to(S,{heroO:0,duration:.4},6.8);
+tl.to({},{duration:.01},DURATION);
+
+/* ============ PEREKAT ============ */
+const stage=$('#stage');
+const fit=()=>{const s=Math.min(innerWidth/1920,innerHeight/1080);
+  stage.style.transform=`translate(-50%,-50%) scale(${s})`;};
+addEventListener('resize',fit); fit();
+
+const clock=$('#clock'),scrub=$('#scrub'),btn=$('#btn-play');
+let scrubbing=false;
+(function frame(){ const t=tl.time(); render(t);
+  clock.textContent=t.toFixed(2)+'s';
+  if(!scrubbing)scrub.value=String(t/DURATION*1000);
+  requestAnimationFrame(frame); })();
+
+const toggle=()=>{ if(tl.paused()||tl.progress()>=1){
+    if(tl.progress()>=1)tl.progress(0); tl.play(); btn.textContent='Pause';}
+  else{tl.pause();btn.textContent='Play';} };
+btn.onclick=toggle;
+$('#btn-restart').onclick=()=>{tl.pause(0);tl.play();btn.textContent='Pause';};
+scrub.addEventListener('pointerdown',()=>{scrubbing=true;tl.pause();btn.textContent='Play';});
+addEventListener('pointerup',()=>scrubbing=false);
+scrub.addEventListener('input',()=>{tl.pause();tl.time(scrub.value/1000*DURATION);});
+addEventListener('keydown',e=>{ if(e.code==='Space'){e.preventDefault();toggle();}
+  if(/^[rR]$/.test(e.key)){tl.pause(0);tl.play();}
+  if(/^[hH]$/.test(e.key))$('#ui').classList.toggle('on'); });
+const Q=new URLSearchParams(location.search);
+if(Q.has('debug'))$('#ui').classList.add('on');            // default: TANPA player
+tl.eventCallback('onComplete',()=>{tl.play(0);});           // default: loop
+
+/* split diukur SETELAH font termuat — fallback memberi lebar salah */
+/* seek sinkron: paksa GSAP menulis gaya + gambar kanvas sekarang (rAF bisa dithrottle) */
+const seek=t=>{tl.pause();tl.time(t,false);if(gsap.ticker.tick)gsap.ticker.tick();render(t);};
+window.OPENER={tl,DURATION,seek,ready:false};   // dipakai konsol & skrip export
+document.fonts.ready.then(()=>{window.OPENER.ready=true;if(!Q.has('clean'))tl.play(0);});   // autoplay; ?clean=1 (export) tidak autoplay
+</script>
+</body>
+</html>
