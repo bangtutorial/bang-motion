@@ -378,6 +378,12 @@ untuk teks. User yang memberi foto sendiri juga dibantu daftar ini.
 - Ken Burns saja tetap ditolak (SKILL.md larangan struktural); foto latar penuh memakai
   parallax atau kamera yang benar-benar bergerak.
 
+**6. Video sebagai pelengkap** — sumber ditanyakan dengan cara yang sama (file user, generate
+lewat MCP dengan cek biaya, atau stok). Contoh di opener: rekaman layar produk di dalam mockup
+perangkat pada promo SaaS, B-roll orang memakai produk di dalam wadah bentuk, satu klip
+penekanan di antara adegan animasi. Klip dipasang sebagai layer footage yang terikat timeline
+(`techniques.md` §9b), bukan video yang diputar sendiri.
+
 ## Tur produk berselang klaim — layout, warna, ritme
 
 

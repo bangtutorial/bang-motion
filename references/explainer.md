@@ -263,6 +263,9 @@ autoplay. Durasi adegan ikut durasi klip (ukur dulu dengan ffprobe).
   domain publik. Jangan pakai screenshot berita/TV.
 - Kalau foto lokasi persis tidak ada, pakai foto sejenis dan beri label
   "ilustrasi" — jangan berpura-pura.
+- **Video pelengkap**: klip 3–8 dtk sebagai layer footage (`techniques.md` §9b) — dari user,
+  stok berlisensi, atau generate lewat MCP bila disetujui (label "ilustrasi/rekonstruksi" pada
+  topik faktual). Klip tetap dibungkus desain adegan: kartu, bingkai, anotasi, angka.
 
 ## Entitas yang disebut WAJIB tampil (aturan krusial)
 
@@ -367,18 +370,17 @@ lebar ke close-up "terkesan tiba-tiba karena latar tiba-tiba zoom in".
   1080×1920 supaya tidak tertutup caption/navigasi. Grid/latar tetap penuh.
 - **Tanpa kontrol**: tidak ada overlay Play maupun slider. R = replay,
   spasi = pause. `?clean=1` tetap ada untuk render.
-- **Suara harus langsung menyala.** Browser memblokir audio autoplay tanpa
+- **Suara harus terdengar sejak awal.** Browser memblokir audio autoplay tanpa
   gestur (juga di `file://`), dan user menganggap "suara tidak muncul"
-  sebagai bug. Tiga lapis:
-  1. Sertakan **`buka.cmd`** di folder proyek: menjalankan Chrome/Edge
-     dengan `--autoplay-policy=no-user-gesture-required` ke `index.html`
-     → suara langsung jalan. Sebut di README sebagai cara membuka utama.
-  2. Di halaman: coba `vo.play()`; bila berhasil → play dari 0 bersuara.
-  3. Bila ditolak: **JANGAN mulai tanpa suara** — tahan di frame awal dengan
+  sebagai bug. Dua lapis:
+  1. Di halaman: coba `vo.play()`; bila berhasil → play dari 0 bersuara.
+  2. Bila ditolak: **JANGAN mulai tanpa suara** — tahan di frame awal dengan
      petunjuk kecil "ketuk / tekan tombol apa pun", lalu gestur pertama
-     memulai video + suara bersamaan dari 0. (Versi lama yang memutar
-     visual dulu lalu restart saat diketuk terasa seperti suara hilang.)
-  Trik play-muted-lalu-unmute tidak bekerja: unmute tanpa gestur tetap
+     memulai video + suara bersamaan dari 0. (Memutar visual dulu lalu
+     restart saat diketuk terasa seperti suara hilang.)
+  Jangan membuat file peluncur (`.cmd`, `.bat`, skrip shell) untuk memaksa
+  autoplay — deliverable cukup `index.html` (+ `assets/`). Trik
+  play-muted-lalu-unmute juga tidak bekerja: unmute tanpa gestur tetap
   diblokir.
 
 ## Fakta

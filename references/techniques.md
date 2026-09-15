@@ -17,6 +17,7 @@ bukan hukum. Font, warna, dan konten selalu milik brand user.
 7e. Menu gaya render objek (flat, clay, glossy, kaca, isometrik, emas, garis neon)
 8. Tile ikon & mockup UI
 9. Ketikan / angka hidup yang deterministik
+9b. Video sebagai layer footage (clip, sinkron timeline, ekspor)
 10. Jebakan (bug yang pernah terjadi)
 
 ---
@@ -545,6 +546,66 @@ yang jadi inti produk) — bukan kotak input yang ditaruh di setiap opener.
 - Uptime/counter: `f(t) = base + (t - tStart)`, format di render loop.
 - Sparkline/spektrum: jumlah sinus berbeda frekuensi atas `t` — murah,
   terlihat organik, dan reproducible.
+
+## 9b. Video sebagai layer footage
+
+Motion graphic tidak hanya gambar dan shape: klip video bisa menjadi layer seperti footage
+di After Effects — dipotong, diposisikan, di-mask, di-grade, dan dianimasikan bersama elemen
+lain. Semua starter sudah membawa helper `clip()`.
+
+**Kapan video lebih kuat daripada gambar**
+- Gerak nyata yang menjadi bukti: rekaman layar produk, orang memakai produk, proses yang
+  berjalan, suasana tempat.
+- Satu momen penekanan 3–8 dtk — bukan pengganti seluruh motion design. Teks, angka,
+  anotasi, dan transisi tetap dianimasikan di atas/sekitar klip.
+- Bila gambar diam cukup menjelaskan, pakai gambar (lebih ringan, ekspor lebih cepat).
+
+**Sumber klip** (ditanyakan ke user, sama seperti foto — `opener-konsep.md` "Foto dalam opener")
+- File dari user (prioritas): rekaman layar produk, B-roll brand, footage acara.
+- Generate lewat MCP Higgsfield bila disetujui — cek biaya dulu (klip video jauh lebih mahal
+  daripada gambar). Paling konsisten: generate gambar dengan gaya proyek, lalu image-to-video.
+- Stok berlisensi. Konteks faktual (berita, sejarah, data): klip hasil generate diberi label
+  "ilustrasi/rekonstruksi" — jangan disajikan sebagai rekaman asli; wajah orang nyata tidak
+  di-generate.
+
+**Format**
+- MP4 H.264 (`yuv420p`, `+faststart`) atau WebM VP9; tanpa suara (musik/VO tetap trek
+  terpisah); 720p–1080p; potong ke bagian yang dipakai supaya ringan.
+```bash
+ffmpeg -i sumber.mov -ss 2 -t 6 -vf "scale=1920:-2" -c:v libx264 -pix_fmt yuv420p -crf 20 -movflags +faststart -an assets/klip.mp4
+```
+- Deliverable menjadi `index.html` + folder `assets/` berisi klip; sebutkan itu ke user.
+
+**Pola pemakaian** (animasikan PEMBUNGKUS, bukan `<video>`-nya)
+- Di dalam perangkat: layar laptop/ponsel di opener SaaS; kamera menembus ke layar.
+- Di dalam wadah: kartu foto, bingkai membulat, lingkaran, huruf raksasa (`clip-path`/mask).
+- Belahan layar: video di satu sisi, klaim/angka di sisi lain.
+- Layar penuh dengan lapisan di atasnya: grade/tint palet (`filter` atau lapisan
+  `mix-blend-mode`), vignette, teks di kantong kontras (§1b).
+- Waktu: potong `in/out`, `rate` untuk slow/fast motion, `hold` untuk freeze frame akhir.
+- Transisi masuk/keluar sama seperti elemen lain (wipe benda, kartu membesar, match cut).
+
+**API helper** (ada di semua starter, setelah baris `window.OPENER=`)
+```html
+<div class="clipbox" id="box1"><video id="v1" src="assets/klip.mp4" muted playsinline preload="auto"></video></div>
+```
+```js
+clip($('#v1'), {at:4, in:1.5, out:6, rate:1, hold:false});  // at = detik timeline; in/out = potongan sumber
+tl.set('#box1', {autoAlpha:1}, 4);                             // tampilkan pembungkus saat klip mulai
+tl.fromTo('#box1', {scale:.8}, {scale:1, duration:1, ease:'power3.out', immediateRender:false}, 4);
+```
+- Isi video mengikuti jam timeline: saat diputar disinkronkan (koreksi bila selisih > 0,2 dtk),
+  saat scrub/pause di-seek tepat. Jangan pakai atribut `autoplay`/`loop` dan jangan
+  memanggil `play()` sendiri.
+- `OPENER.seekFrame(t)` men-seek timeline DAN menunggu frame klip siap; `snap.mjs` dan
+  `export-frames.mjs` memakainya otomatis, dan menunggu `OPENER.clipsReady()` sebelum mulai.
+- Sembunyikan pembungkus di luar rentang klip (`autoAlpha`) — di luar rentang, video dijeda.
+
+**Jaga-jaga**
+- Paling banyak 2–3 klip tampil bersamaan; klip besar yang tak terlihat tetap di-decode.
+- Ekspor MP4 lebih lambat karena tiap frame menunggu decoder video.
+- Selisih ±1 frame saat diputar real-time itu wajar; hasil ekspor tetap presisi frame.
+- Periksa hasil dengan `snap.mjs` di detik yang ada klipnya, bukan hanya di browser.
 
 ## 10. Jebakan
 

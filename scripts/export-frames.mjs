@@ -33,7 +33,7 @@ await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: SCALE });
 await page.goto(URL, { waitUntil: 'networkidle0' });
 
 // tunggu sampai modul selesai dimuat dan timeline terpasang
-await page.waitForFunction('window.OPENER && window.OPENER.ready', { timeout: 120000 });
+await page.waitForFunction('window.OPENER && window.OPENER.ready && (!window.OPENER.clipsReady || window.OPENER.clipsReady())', { timeout: 120000 });
 await page.evaluate(() => document.fonts.ready);
 await page.evaluate(() => { window.OPENER.tl.pause(0); });
 
@@ -47,7 +47,8 @@ for(let i = 0; i < total; i++){
   // setel waktu, lalu biarkan DUA rAF lewat: satu untuk GSAP menulis gaya,
   // satu lagi untuk loop render menggambar frame dengan nilai baru itu.
   await page.evaluate(async (time) => {
-    (window.OPENER.seek||window.OPENER.tl.time.bind(window.OPENER.tl))(time);
+    if (window.OPENER.seekFrame) await window.OPENER.seekFrame(time);   // ada klip video: tunggu frame-nya siap
+    else (window.OPENER.seek||window.OPENER.tl.time.bind(window.OPENER.tl))(time);
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   }, t);
 

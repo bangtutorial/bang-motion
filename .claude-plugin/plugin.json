@@ -1,7 +1,7 @@
 {
   "name": "bang-motion",
   "displayName": "Bang Motion",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "description": "Build motion graphics in the browser — product openers and promos, bumpers and idents, channel intros, kinetic typography, lower thirds, and five explainer styles — that move like video instead of reading like a slide deck. Output is a single index.html that autoplays and loops.",
   "author": {
     "name": "Bang Tutorial",

@@ -1,8 +1,18 @@
 # Changelog
 
-## 1.17.0 — 2026-09-14
+## 1.18.0 — 2026-09-15
 
-Ringkasan isi paket.
+**Video sebagai layer footage**
+- Semua starter membawa helper `clip(el, {at, in, out, rate, hold})`: klip video mengikuti jam
+  timeline — sinkron saat diputar, tepat saat scrub — dan bisa dipotong, diperlambat, ditahan,
+  di-mask, serta dianimasikan bersama elemen lain.
+- `scripts/snap.mjs` dan `scripts/export-frames.mjs` menunggu frame klip siap, sehingga ekspor MP4
+  tetap presisi frame.
+- Panduan pemakaian, sumber klip (file sendiri, generate lewat MCP, stok berlisensi), format, dan
+  pola layout di `references/techniques.md` §9b.
+- Deliverable tetap `index.html` (+ `assets/` bila memakai klip atau audio), tanpa file peluncur.
+
+## 1.17.0 — 2026-09-14
 
 **Opener dan promo**
 - Kerangka dipilih, bukan diwarisi: tiga kandidat konsep dari menu 19 konsep, sidik jari

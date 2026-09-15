@@ -7,7 +7,7 @@
 **An agent skill that turns your AI coding agent into a motion designer.**<br>
 Openers, promos, product demos, kinetic typography, and explainers — built as a single `index.html` that plays like video, not like slides.
 
-[![Version](https://img.shields.io/badge/version-1.17.0-2f6fd6?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.18.0-2f6fd6?style=flat-square)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3fa34d?style=flat-square)](LICENSE)
 [![Agent Skills](https://img.shields.io/badge/format-Agent%20Skills-1c2a4a?style=flat-square)](#install)
 [![Works with](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Gemini%20CLI%20%C2%B7%20Cursor-7a5af5?style=flat-square)](#install)
@@ -35,6 +35,7 @@ It also stops every project from looking the same. The look is **derived from yo
 | 🔤 **Kinetic typography** | lyric-style statements, event announcements, manifestos | 10–30 s |
 | 📺 **Bumpers, idents, channel intros** | short brand moments that loop | 3–10 s |
 | 🧭 **Explainers** | six explainer styles, optional voice-over sync, 16:9 or 9:16 | 30–120 s |
+| 🎥 **Video layers** | your own or generated clips placed like footage — inside devices, frames, and masks, locked to the timeline | — |
 | 🎞️ **After Effects builds** | cartoon explainers built directly inside AE through the Higgsfield MCP bridge | — |
 
 Every deliverable is one `index.html`: double-click to play, autoplay + loop, `?debug=1` for a scrub bar, and an optional frame-by-frame export to MP4.
@@ -174,6 +175,9 @@ Kinetic typography for our festival announcement: "City of Sound, 3 nights, 48 s
 Explain how a container port works in 60 seconds, visual journalism style, no voice-over.
 ```
 ```text
+Promo for our editing app with a screen recording playing inside a laptop mockup, 30 seconds. Clip attached.
+```
+```text
 A cartoon explainer on why volcanoes erupt, for kids, 9:16, I will send a voice-over later.
 ```
 
@@ -224,6 +228,7 @@ The skill triggers on requests like "make an opener…", "promo video…", "expl
 | Verify frames automatically | Node + puppeteer (`scripts/snap.mjs`) — optional; `?debug=1` works by hand |
 | Export MP4 | Node + puppeteer + ffmpeg (`scripts/export-frames.mjs`) — optional |
 | Sync to voice-over | ffmpeg, **or** nothing: `scripts/vo-pauses.html` detects pauses in the browser |
+| Use video clips | MP4 (H.264) or WebM files in `assets/` — optional |
 | Generate images | any image MCP the agent can call — optional |
 | Build in After Effects | After Effects + the Higgsfield MCP bridge — optional |
 
@@ -236,6 +241,7 @@ A deliverable never needs `npm install` to be watched.
 - **Examples are principles, not scripts** — openings and endings differ from the concept's example, signature moments are transformed, and the example's colors and shapes never carry over.
 - **Living typography** — sentence case, emphasis by order, size, or pause; word highlights and punctuation only when they add meaning.
 - **A background that never sits still** — a chosen background motion, and color changes with a visible trigger.
+- **Video as footage layers** — clips follow the timeline clock, so scrubbing and MP4 export stay frame-accurate.
 - **A camera that works** — breathing drift, motivated push-throughs, and in UI demos a camera that follows the important clicks.
 - **Structural anti-slide checks** — no fading sections, a persistent subject or world, at most two text levels, varied transitions with real depth.
 - **Readable on phones** — no text under 30 px on a 1080-wide stage.
@@ -292,6 +298,12 @@ Yes. The agent takes rhythm, energy, and motion language from it — not the pal
 <summary><b>Do I need photos?</b></summary>
 
 Only for photo-based styles. Use your own, a licensed stock set, or let the agent generate fictional people and props through an image MCP. Otherwise pick an illustrated or typographic style.
+</details>
+
+<details>
+<summary><b>Can I use video clips?</b></summary>
+
+Yes. Clips become footage layers: trimmed, masked, graded, and animated with the rest of the scene, always in sync with the timeline — including frame-by-frame MP4 export. Use your own footage, licensed stock, or clips generated through a video MCP.
 </details>
 
 <details>

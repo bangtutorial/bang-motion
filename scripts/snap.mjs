@@ -33,15 +33,18 @@ const browser = await puppeteer.launch({ headless: 'new', args: ['--enable-gpu',
 const page = await browser.newPage();
 page.on('pageerror', e => console.log('PAGEERROR', e.message));
 await page.goto(URL, { waitUntil: 'networkidle0' });
-await page.waitForFunction('window.OPENER && window.OPENER.ready', { timeout: 60000 });
+await page.waitForFunction('window.OPENER && window.OPENER.ready && (!window.OPENER.clipsReady || window.OPENER.clipsReady())', { timeout: 60000 });
 const { W, H } = await page.evaluate(() => ({ W: window.OPENER.W || 1920, H: window.OPENER.H || 1080 }));
 await page.setViewport({ width: W, height: H, deviceScaleFactor: 1 });
 for (const ts of times) {
   const t = Number(ts);
   await page.evaluate(async (time) => {
-    window.OPENER.seek(time);
+    if (window.OPENER.seekFrame) { await window.OPENER.seekFrame(time); window.OPENER.seek(time); }   // ada klip video
+    else {
+      window.OPENER.seek(time);
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     window.OPENER.seek(time);   // dua kali: GSAP menulis style, lalu render loop menggambar
+    }
   }, t);
   await page.screenshot({ path: `${outDir}/t${t.toFixed(2).replace('.', '_')}.png`, clip: { x: 0, y: 0, width: W, height: H } });
   process.stdout.write(`${t} `);

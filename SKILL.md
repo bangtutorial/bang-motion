@@ -5,14 +5,14 @@ license: MIT
 metadata:
   author: Bang Tutorial
   author_url: https://youtube.com/bangtutorial
-  version: "1.17.0"
+  version: "1.18.0"
   updated: "2026-09-14"
   homepage: https://github.com/bangtutorial/bang-motion
 ---
 
 # Bang Motion — motion graphic web yang bukan PPT
 
-**v1.17.0 · by [Bang Tutorial](https://youtube.com/bangtutorial) · MIT.** Riwayat perubahan di `CHANGELOG.md`;
+**v1.18.0 · by [Bang Tutorial](https://youtube.com/bangtutorial) · MIT.** Riwayat perubahan di `CHANGELOG.md`;
 cara pasang di `README.md`.
 
 Skill ini untuk AI coding agent apa pun (format Agent Skills terbuka).
@@ -423,6 +423,9 @@ bagian 1 dan 1b. Ringkasnya:
       di kode, foto dianimasikan (pop, parallax, wadah) — bukan Ken Burns saja
 - [ ] Bila memakai grainy gradient/butiran: butiran masih terlihat di MP4 hasil encode
       dan gradien tidak banding
+- [ ] Bila memakai video: klip dipasang lewat `clip()` (tanpa `autoplay`/`loop`), dibungkus
+      elemen yang dianimasikan, sumbernya disepakati user, folder `assets/` disebutkan saat
+      penyerahan, dan detik yang berisi klip sudah dipotret (`snap.mjs`)
 - [ ] Gerak latar dipilih dari menu §7c dan BERBEDA dari proyek sebelumnya;
       tidak ada batang/garis melintas ke samping kecuali tema kecepatan/
       aliran dan belum dipakai di proyek sebelumnya
@@ -448,8 +451,9 @@ bagian 1 dan 1b. Ringkasnya:
 - [ ] Nol pemakaian `Date.now()` / `Math.random()` di jalur render
 - [ ] Sudah dipotret di detik kunci (snap.mjs / ?debug=1) dan dilihat dengan
       mata — bukan render penuh; MP4 hanya bila diminta
-- [ ] Ada suara? Sertakan `buka.cmd` (flag autoplay) dan halaman menahan di
-      frame awal bila autoplay diblokir — tidak pernah mulai tanpa suara
+- [ ] Ada suara? Halaman menahan di frame awal bila autoplay diblokir dan mulai
+      bersama suara pada gestur pertama — tidak pernah mulai tanpa suara; tanpa
+      file peluncur (`.cmd`/`.bat`)
 - [ ] Explainer kolase: kamera punya koreografi (close-up → meluncur → zoom
       out), bukan hanya elemen in/out — lihat explainer.md "Kamera explainer".
       Kartun panggung: tidak ada frame dengan zoom < 1,08; kamera hanya
@@ -526,7 +530,7 @@ dan buat layer dari belakang ke depan. Build 10 panggung ≈ 1 jam, 0 kredit.
 | `references/opener-konsep.md` | OPENER/PROMO sebelum rundown: tiga kandidat konsep, menu 19 konsep (termasuk estafet benda, pamer sistem brand, klaim → cara → hasil, ekosistem UI hidup, pop flat berfoto, menembus bentuk bergradien, dan tur produk berselang klaim, semuanya diturunkan dari layanan/aset/produk brand), panduan layout-warna-ritme, panduan animasi UI untuk app/SaaS, panduan foto dalam opener (input user / generate via MCP), menu fitur, pembuka, penutup, transisi tanpa cut yang dibawa objek, sidik jari struktur — mencegah kerangka template |
 | `references/explainer.md` | bila yang diminta explainer/video penjelasan (kartun+VO, jurnalisme visual foto, katalog putih, sketsa vintage, atau aksi kontinu; default 16:9, 9:16 hanya bila diminta) |
 | `references/architecture.md` | saat scaffold / butuh alasan di balik struktur |
-| `references/techniques.md` | saat membangun adegan & efek (termasuk grainy gradient §7d dan menu gaya render objek §7e) |
+| `references/techniques.md` | saat membangun adegan & efek (termasuk grainy gradient §7d, menu gaya render objek §7e, dan video sebagai layer footage §9b) |
 | `references/roadmap.md` | saat mengembangkan skill ini lebih lanjut |
 | `assets/starter-opener.html` | titik awal OPENER/promo — arsitektur + perkakas (8 pintu teks, transisi opsional); SENGAJA tanpa urutan adegan contoh, kerangka dari `opener-konsep.md` |
 | `assets/starter-explainer.html` | EXPLAINER gaya aksi kontinu (vektor): mode aliran (strip + hero + objek dunia) + view peta + whip + contoh mode kolase |
