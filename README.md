@@ -220,6 +220,10 @@ git clone https://github.com/bangtutorial/bang-motion
 
 The skill triggers on requests like "make an opener…", "promo video…", "explainer…", or a complaint that a web animation "looks like PowerPoint".
 
+### In English
+
+`SKILL.md` and the files in `references/` are written in Indonesian. [`SKILL.en.md`](SKILL.en.md) is an English translation of `SKILL.md` for reading the rules in English; `SKILL.md` stays the source of truth, and agents follow it as it is. For an English copy in a manual install, copy `SKILL.en.md` over `SKILL.md` in your copy of the folder; in a plain chat, paste `SKILL.en.md` instead of `SKILL.md`.
+
 ## Requirements
 
 | To… | You need |
@@ -252,6 +256,7 @@ Full detail lives in `SKILL.md` and `references/`.
 
 ```
 SKILL.md                         rules & workflow (read by the agent)
+SKILL.en.md                      English translation of SKILL.md
 .claude-plugin/                  plugin + marketplace manifests
 references/
   opener-konsep.md               19 opener concepts, UI animation, photos in openers
